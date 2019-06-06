@@ -74,9 +74,7 @@ static int voice_morph_set(EffectContext *ctx, const char *key, int flags) {
     if (entry) {
         AeLogI("key = %s val = %s\n", entry->key, entry->value);
         int key_length = strlen(entry->key);
-        if (key_length >= 9 && 0 == strncmp(entry->key, "morph_on", 9)) {
-            morph_core_morph_on(priv->morph, atoi(entry->value));
-        } else if (key_length >= 4 && 0 == strncmp(entry->key, "mode", 4)) {
+        if (key_length >= 4 && 0 == strncmp(entry->key, "mode", 4)) {
             voice_morph_set_mode(ctx->priv, entry->value);
         }
     }

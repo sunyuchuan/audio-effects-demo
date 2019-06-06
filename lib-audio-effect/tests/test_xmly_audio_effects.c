@@ -1,4 +1,5 @@
 #include <pthread.h>
+#include <stdint.h>
 #include <string.h>
 #include <sys/time.h>
 #include <termio.h>
@@ -141,7 +142,7 @@ static int process_message(XmlyEffectContext *ctx) {
 void *xmly_effects_thread(void *arg) {
     int ret = 0;
     int buffer_size = 1024;
-    short buffer[buffer_size];
+    int16_t buffer[buffer_size];
 
     XmlyEffectContext *ctx = create_xmly_effect();
     ret = init_xmly_effect(ctx);
@@ -156,7 +157,7 @@ void *xmly_effects_thread(void *arg) {
         ret = process_message(ctx);
         if (ret < 0) break;
         // 读取数据
-        ret = fread(buffer, sizeof(short), buffer_size, pcm_reader);
+        ret = fread(buffer, sizeof(int16_t), buffer_size, pcm_reader);
         if (ret <= 0) {
             AeLogE("test_xmly_audio_effects.c:%d %s fread error(ret = %d).\n",
                    __LINE__, __func__, ret);
@@ -169,7 +170,7 @@ void *xmly_effects_thread(void *arg) {
         // 取出数据
         ret = xmly_receive_samples(ctx, buffer, buffer_size);
         while (ret > 0) {
-            fwrite(buffer, sizeof(short), ret, pcm_writer);
+            fwrite(buffer, sizeof(int16_t), ret, pcm_writer);
             ret = xmly_receive_samples(ctx, buffer, buffer_size);
         }
         usleep(1000);

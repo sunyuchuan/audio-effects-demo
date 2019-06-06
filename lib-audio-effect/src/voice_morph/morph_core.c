@@ -9,6 +9,7 @@
 #include "resample/resample.h"
 #include "tools/conversion.h"
 #include "tools/fifo.h"
+#include "tools/sdl_mutex.h"
 
 #define DST_SAMPLE_RATE 44100
 #define RESAMPLE_FRAME_LEN 512
@@ -19,6 +20,7 @@ struct MorphCoreT {
     fifo* fifo_out;
     fifo* fifo_swr;
     MorphCore* morph;
+    SdlMutex* sdl_mutex;
     struct SwrContext* swr_ctx;
     uint8_t** src_samples;
     uint8_t** dst_samples;
@@ -516,6 +518,11 @@ MorphCore* morph_core_create() {
         ret = AEERROR_NOMEM;
         goto end;
     }
+    morph->sdl_mutex = sdl_mutex_create();
+    if (NULL == morph->sdl_mutex) {
+        ret = AEERROR_NOMEM;
+        goto end;
+    }
     morph->is_morph_on = 0;
     morph->max_dst_nb_samples = RESAMPLE_FRAME_LEN;
     ret = allocate_sample_buffer(&morph->src_samples, 1, RESAMPLE_FRAME_LEN,
@@ -535,6 +542,7 @@ void morph_core_free(MorphCore** morph) {
     if (self->fifo_in) fifo_delete(&self->fifo_in);
     if (self->fifo_out) fifo_delete(&self->fifo_out);
     if (self->fifo_swr) fifo_delete(&self->fifo_swr);
+    if (self->sdl_mutex) sdl_mutex_free(&self->sdl_mutex);
     if (self->swr_ctx) swr_free(&self->swr_ctx);
     if (self->src_samples) {
         av_freep(&self->src_samples[0]);
@@ -559,9 +567,8 @@ static float get_pitch_factor(float pitch_coeff) {
         return 0.9f;
     } else if (pitch_coeff >= 0.8f) {
         return 0.8f;
-    } else {
-        return 0.7f;
     }
+    return 0.7f;
 }
 
 static int morph_core_init_common(MorphCore* const morph) {
@@ -573,9 +580,12 @@ static int morph_core_init_common(MorphCore* const morph) {
     memset(morph->seg_pitch_primary, 0, sizeof(float) * 7);
     memset(morph->seg_pitch_new, 0, sizeof(float) * 7);
     int src_sample_rate = (int)roundf(morph->formant_ratio * PITCH_SAMPLE_RATE);
-    return resampler_init(1, 1, src_sample_rate, DST_SAMPLE_RATE,
-                          AV_SAMPLE_FMT_FLT, AV_SAMPLE_FMT_S16,
-                          &morph->swr_ctx);
+    sdl_mutex_lock(morph->sdl_mutex);
+    int ret =
+        resampler_init(1, 1, src_sample_rate, DST_SAMPLE_RATE,
+                       AV_SAMPLE_FMT_FLT, AV_SAMPLE_FMT_S16, &morph->swr_ctx);
+    sdl_mutex_unlock(morph->sdl_mutex);
+    return ret;
 }
 
 int morph_core_init(MorphCore* const morph) {
@@ -584,23 +594,7 @@ int morph_core_init(MorphCore* const morph) {
                              MAX_CAND_NUM, 0.01f);
 }
 
-static void resample_rest_audio(MorphCore* morph) {
-    size_t rest_nb_samples = fifo_occupancy(morph->fifo_swr);
-    while (rest_nb_samples > 0) {
-        rest_nb_samples = FFMIN(RESAMPLE_FRAME_LEN, rest_nb_samples);
-        fifo_read(morph->fifo_swr, morph->src_samples[0], rest_nb_samples);
-        int ret =
-            resample_audio(morph->swr_ctx, morph->src_samples, rest_nb_samples,
-                           &morph->dst_samples, &morph->max_dst_nb_samples, 1);
-        if (ret > 0) fifo_write(morph->fifo_out, morph->dst_samples[0], ret);
-
-        rest_nb_samples = fifo_occupancy(morph->fifo_swr);
-    }
-}
-
 void morph_core_set_type(MorphCore* morph, enum MorphType type) {
-    // 重采样缓存的音频
-    resample_rest_audio(morph);
     // 更新变声类型
     morph->morph_type = type;
     morph->is_morph_on = 1;
@@ -628,10 +622,6 @@ void morph_core_set_type(MorphCore* morph, enum MorphType type) {
     morph_core_init_common(morph);
 }
 
-void morph_core_morph_on(MorphCore* morph, const int is_morph_on) {
-    morph->is_morph_on = is_morph_on;
-}
-
 int morph_core_send(MorphCore* morph, const int16_t* samples,
                     const size_t nb_samples) {
     assert(NULL != morph);
@@ -651,22 +641,30 @@ int morph_core_receive(MorphCore* morph, int16_t* samples,
         while (fifo_occupancy(morph->fifo_swr) >= RESAMPLE_FRAME_LEN) {
             fifo_read(morph->fifo_swr, morph->src_samples[0],
                       RESAMPLE_FRAME_LEN);
+            sdl_mutex_lock(morph->sdl_mutex);
             int ret = resample_audio(morph->swr_ctx, morph->src_samples,
                                      RESAMPLE_FRAME_LEN, &morph->dst_samples,
                                      &morph->max_dst_nb_samples, 1);
+            sdl_mutex_unlock(morph->sdl_mutex);
             if (ret > 0)
                 fifo_write(morph->fifo_out, morph->dst_samples[0], ret);
         }
     } else {
-        while (fifo_occupancy(morph->fifo_in) > 0) {
-            size_t nb_samples =
-                fifo_read(morph->fifo_in, samples, max_nb_samples);
-            fifo_write(morph->fifo_swr, samples, nb_samples);
+        while (fifo_occupancy(morph->fifo_in) >= RESAMPLE_FRAME_LEN) {
+            fifo_read(morph->fifo_in, morph->dst_samples[0],
+                      RESAMPLE_FRAME_LEN);
+            S16ToFloat((int16_t*)morph->dst_samples[0],
+                       (float*)morph->src_samples[0], RESAMPLE_FRAME_LEN);
+            fifo_write(morph->fifo_swr, morph->src_samples[0],
+                       RESAMPLE_FRAME_LEN);
         }
-        while (fifo_occupancy(morph->fifo_swr) > 0) {
-            size_t nb_samples =
-                fifo_read(morph->fifo_swr, samples, max_nb_samples);
-            fifo_write(morph->fifo_out, samples, nb_samples);
+        while (fifo_occupancy(morph->fifo_swr) >= RESAMPLE_FRAME_LEN) {
+            fifo_read(morph->fifo_swr, morph->src_samples[0],
+                      RESAMPLE_FRAME_LEN);
+            FloatToS16((float*)morph->src_samples[0],
+                       (int16_t*)morph->dst_samples[0], RESAMPLE_FRAME_LEN);
+            fifo_write(morph->fifo_out, morph->dst_samples[0],
+                       RESAMPLE_FRAME_LEN);
         }
     }
     return fifo_read(morph->fifo_out, samples, max_nb_samples);

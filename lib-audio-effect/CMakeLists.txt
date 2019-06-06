@@ -92,6 +92,7 @@ src/tools/dict.c
 src/tools/fifo.c
 src/tools/logger.c
 src/tools/mem.c
+src/tools/sdl_mutex.c
 src/voice_morph/morph_core.c
 src/effects.c
 src/echo.c
