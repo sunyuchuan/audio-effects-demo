@@ -7,6 +7,7 @@
 #include "logger.h"
 #include "math/spl_math.h"
 #include "tools/fifo.h"
+#include "tools/sdl_mutex.h"
 
 #define COMB_NUM 8
 #define ALLPASS_NUM 4
@@ -19,6 +20,7 @@
 typedef struct {
     fifo *fifo_in;
     fifo *fifo_out;
+    SdlMutex *sdl_mutex;
     int comb_state[COMB_NUM];
     int *comb_buf[COMB_NUM];
     short comb_buf_len[COMB_NUM];
@@ -46,6 +48,7 @@ static int xmly_reverb_close(EffectContext *ctx) {
         priv_t *priv = (priv_t *)ctx->priv;
         if (priv->fifo_in) fifo_delete(&priv->fifo_in);
         if (priv->fifo_out) fifo_delete(&priv->fifo_out);
+        if (priv->sdl_mutex) sdl_mutex_free(&priv->sdl_mutex);
         for (int i = 0; i < COMB_NUM; ++i) {
             if (priv->comb_buf[i]) {
                 free(priv->comb_buf[i]);
@@ -95,6 +98,11 @@ static int xmly_reverb_init(EffectContext *ctx, int argc, char **argv) {
         ret = AEERROR_NOMEM;
         goto end;
     }
+    priv->sdl_mutex = sdl_mutex_create();
+    if (NULL == priv->sdl_mutex) {
+        ret = AEERROR_NOMEM;
+        goto end;
+    }
     // LIVE
     priv->comb_buf_len[0] = 916;
     priv->comb_buf_len[1] = 988;
@@ -132,6 +140,8 @@ end:
 
 static void reverb_set_mode(priv_t *priv, const char *mode) {
     AeLogI("xmly_reverb.c:%d %s.\n", __LINE__, __func__);
+    sdl_mutex_lock(priv->sdl_mutex);
+
     priv->is_reverb_on = 1;
     short mode_length = strlen(mode);
     if (mode_length >= 3 && 0 == strncmp(mode, "KTV", 3)) {
@@ -192,6 +202,8 @@ static void reverb_set_mode(priv_t *priv, const char *mode) {
         priv->allpass_buf_len[2] = 220;
         priv->allpass_buf_len[3] = 270;
     }
+    sdl_mutex_unlock(priv->sdl_mutex);
+    AeLogI("xmly_reverb.c:%d %s end.\n", __LINE__, __func__);
 }
 
 static int xmly_reverb_set(EffectContext *ctx, const char *key, int flags) {
@@ -237,6 +249,8 @@ static int xmly_reverb_receive(EffectContext *ctx, void *samples,
     assert(NULL != priv->fifo_out);
 
     if (priv->is_reverb_on) {
+        sdl_mutex_lock(priv->sdl_mutex);
+
         size_t nb_samples = fifo_read(priv->fifo_in, samples, max_nb_samples);
         int16_t *x = samples;
         for (size_t i = 0; i < nb_samples; ++i) {
@@ -399,6 +413,8 @@ static int xmly_reverb_receive(EffectContext *ctx, void *samples,
             x[i] = tmp32no3 >> 15;
         }
         fifo_write(priv->fifo_out, samples, nb_samples);
+
+        sdl_mutex_unlock(priv->sdl_mutex);
     } else {
         while (fifo_occupancy(priv->fifo_in) > 0) {
             size_t nb_samples =

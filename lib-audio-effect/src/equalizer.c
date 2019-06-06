@@ -14,12 +14,14 @@
 #include "tools/dict.h"
 #include "tools/fifo.h"
 #include "tools/mem.h"
+#include "tools/sdl_mutex.h"
 
 #define MIN_BUFFER_SIZE 2048
 #define SAMPLE_RATE 44100
 
 typedef struct {
     fifo *f;
+    SdlMutex *sdl_mutex;
     short effect_mode;
     size_t nb_effect_bands;
     Band *effect_bands;
@@ -34,6 +36,7 @@ static int equalizer_close(EffectContext *ctx) {
     if (ctx->priv) {
         priv_t *priv = (priv_t *)ctx->priv;
         if (priv->f) fifo_delete(&priv->f);
+        if (priv->sdl_mutex) sdl_mutex_free(&priv->sdl_mutex);
         if (priv->flp_buffer) av_freep(&priv->flp_buffer);
         if (priv->effect_bands) av_freep(&priv->effect_bands);
     }
@@ -168,6 +171,12 @@ static int equalizer_init(EffectContext *ctx, int argc, char **argv) {
         return AEERROR_NOMEM;
     }
 
+    priv->sdl_mutex = sdl_mutex_create();
+    if (NULL == priv->sdl_mutex) {
+        equalizer_close(ctx);
+        return AEERROR_NOMEM;
+    }
+
     // 为 flp_buffer 分配空间
     priv->flp_buffer = av_mallocz(sizeof(float) * MIN_BUFFER_SIZE);
     if (NULL == priv->flp_buffer) {
@@ -185,6 +194,8 @@ static int equalizer_init(EffectContext *ctx, int argc, char **argv) {
 
 static void equalizer_set_mode(priv_t *priv, const char *mode) {
     AeLogI("equalizer.c:%d %s mode = %s.\n", __LINE__, __func__, mode);
+    sdl_mutex_lock(priv->sdl_mutex);
+
     if (priv->effect_bands) {
         av_freep(&priv->effect_bands);
         priv->nb_effect_bands = 0;
@@ -214,6 +225,7 @@ static void equalizer_set_mode(priv_t *priv, const char *mode) {
     if (mode_length >= 9 && 0 == strncmp(mode, "SoftPitch", 9)) {
         create_soft_pitch(priv);
     }
+    sdl_mutex_unlock(priv->sdl_mutex);
 }
 
 static int equalizer_set(EffectContext *ctx, const char *key, int flags) {
@@ -281,9 +293,11 @@ static int equalizer_receive(EffectContext *ctx, void *samples,
         S16ToFloat(samples, priv->flp_buffer, ret);
 
         // 均衡器音效处理
+        sdl_mutex_lock(priv->sdl_mutex);
         for (uint16_t i = 0; i < priv->nb_effect_bands; ++i) {
             band_rocess(priv->effect_bands + i, priv->flp_buffer, ret);
         }
+        sdl_mutex_unlock(priv->sdl_mutex);
 
         // 处理后的数据转换成short类型
         FloatToS16(priv->flp_buffer, samples, ret);

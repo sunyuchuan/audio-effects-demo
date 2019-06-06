@@ -7,6 +7,7 @@
 #include "logger.h"
 #include "math/spl_math.h"
 #include "tools/fifo.h"
+#include "tools/sdl_mutex.h"
 
 #define FRAME_LEN 1024
 #define MAX_INPUT_FRAME_NUM 8
@@ -20,6 +21,7 @@
 typedef struct {
     fifo *fifo_in;
     fifo *fifo_out;
+    SdlMutex *sdl_mutex;
     short is_echo_on;
     short delay_frame_num;
     short weight[MAX_ECHO_LEVEL];
@@ -35,6 +37,7 @@ static int xmly_echo_close(EffectContext *ctx) {
         priv_t *priv = (priv_t *)ctx->priv;
         if (priv->fifo_in) fifo_delete(&priv->fifo_in);
         if (priv->fifo_out) fifo_delete(&priv->fifo_out);
+        if (priv->sdl_mutex) sdl_mutex_free(&priv->sdl_mutex);
     }
     return 0;
 }
@@ -77,6 +80,11 @@ static int xmly_echo_init(EffectContext *ctx, int argc, char **argv) {
         ret = AEERROR_NOMEM;
         goto end;
     }
+    priv->sdl_mutex = sdl_mutex_create();
+    if (NULL == priv->sdl_mutex) {
+        ret = AEERROR_NOMEM;
+        goto end;
+    }
 
     init_self_parameter(priv);
 
@@ -86,21 +94,25 @@ end:
 }
 
 static void set_delay(priv_t *priv, int delay) {
+    sdl_mutex_lock(priv->sdl_mutex);
     priv->delay_frame_num = FFMAX(0, FFMIN(MAX_DELAY_FRAME_NUM, delay));
     for (int i = 0; i < MAX_ECHO_LEVEL; i++) {
         memset(priv->delay_buf[i], 0, sizeof(int16_t) * MAX_DELAY_BUFFER_LEN);
         priv->res_len[i] = priv->delay_frame_num * (i + 1) * FRAME_LEN;
     }
+    sdl_mutex_unlock(priv->sdl_mutex);
 }
 
 static void echo_set_mode(priv_t *priv, const char *mode) {
-    int delay = 0;
     int mode_length = strlen(mode);
-    priv->is_echo_on = 1;
     if (mode_length >= 7 && 0 == strncmp(mode, "no_echo", 7)) {
         priv->is_echo_on = 0;
         return;
-    } else if (mode_length >= 9 && 0 == strncmp(mode, "classroom", 9)) {
+    }
+
+    int delay = 0;
+    priv->is_echo_on = 1;
+    if (mode_length >= 9 && 0 == strncmp(mode, "classroom", 9)) {
         delay = 1;
     } else if (mode_length >= 6 && 0 == strncmp(mode, "church", 6)) {
         delay = 3;
@@ -145,6 +157,7 @@ static int xmly_echo_receive(EffectContext *ctx, void *samples,
     assert(max_nb_samples < MAX_INPUT_SAMPLE_NUM);
 
     if (priv->is_echo_on) {
+        sdl_mutex_lock(priv->sdl_mutex);
         size_t nb_samples = fifo_read(priv->fifo_in, samples, max_nb_samples);
         for (size_t i = 0; i < MAX_ECHO_LEVEL; ++i) {
             memcpy(priv->delay_buf[i] + priv->res_len[i], samples,
@@ -171,6 +184,7 @@ static int xmly_echo_receive(EffectContext *ctx, void *samples,
                     sizeof(int16_t) * (priv->res_len[i] - nb_samples));
             priv->res_len[i] -= nb_samples;
         }
+        sdl_mutex_unlock(priv->sdl_mutex);
     } else {
         while (fifo_occupancy(priv->fifo_in) > 0) {
             size_t nb_samples =
@@ -178,7 +192,6 @@ static int xmly_echo_receive(EffectContext *ctx, void *samples,
             fifo_write(priv->fifo_out, samples, nb_samples);
         }
     }
-
     return fifo_read(priv->fifo_out, samples, max_nb_samples);
 }
 
