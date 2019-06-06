@@ -95,7 +95,6 @@ public class AudioCapturer {
         mAudioRecord.release();
 
         mIsCaptureStarted = false;
-        mAudioFrameCapturedListener = null;
 
         Log.i(TAG, "Stop audio capture success !");
     }

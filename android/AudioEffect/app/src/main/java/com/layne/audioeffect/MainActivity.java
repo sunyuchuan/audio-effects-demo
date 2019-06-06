@@ -37,7 +37,6 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
     private Button mBtnNsSwitch;
     private Thread mThread;
     private AudioEffect mEffect;
-    private boolean mIsPlaying = false;
     private short[] speechSamples = new short[maxNbSamples];
 
     @Override
@@ -64,6 +63,13 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
         mPlayer = new AudioPlayer();
         mCapturer = new AudioCapturer();
         mCapturer.setOnAudioFrameCapturedListener(MainActivity.this);
+    }
+
+    @Override
+    protected void onStop() {
+        stopPlay();
+        stopRecord();
+        super.onStop();
     }
 
     private void getReadExternalStoragePermission() {
@@ -132,7 +138,7 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
             try {
                 // 打开播放文件
                 File inEffect = new File(effect);
-                InputStream mIsEffect = new FileInputStream(inEffect);
+                InputStream isEffect = new FileInputStream(inEffect);
 
                 // 启动播放
                 if (!mPlayer.isPlayerStarted()) {
@@ -143,11 +149,10 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
                 // 创建字节数组
                 int bufferSize = 4096;
                 byte[] data = new byte[bufferSize];
-                while (mIsPlaying) {
+                while (true) {
                     // 读取内容，放到字节数组里面
-                    int readsize = mIsEffect.read(data);
+                    int readsize = isEffect.read(data);
                     if (readsize <= 0) {
-                        mIsEffect.close();
                         Log.w(TAG, "  end of file stop player");
                         mPlayer.stopPlayer();
                         break;
@@ -155,9 +160,47 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
                         mPlayer.play(data, 0, readsize);
                     }
                 }
+                isEffect.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private void startRecord() {
+        mBtnRecord.setText("停止");
+        OpenPcmFiles();
+        // 启动录音
+        if (!mCapturer.isCaptureStarted()) {
+            mCapturer.startCapture();
+        }
+    }
+
+    private void stopRecord() {
+        mBtnRecord.setText("录制");
+        // 停止录音
+        if (mCapturer.isCaptureStarted()) {
+            mCapturer.stopCapture();
+        }
+        try {
+            if (null != mOsEffect) mOsEffect.close();
+            if (null != mOsSpeech) mOsSpeech.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void startPlay() {
+        mBtnPlay.setText("停止");
+        mThread = new Thread(new WorkRunnable());
+        mThread.setPriority(Thread.MAX_PRIORITY);
+        mThread.start();
+    }
+
+    private void stopPlay() {
+        mBtnPlay.setText("试听");
+        if (null != mThread && mThread.isAlive()) {
+            mThread.interrupt();
         }
     }
 
@@ -166,42 +209,17 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
         int id = v.getId();
         if (id == R.id.btn_record) {
             if (mBtnRecord.getText().toString().contentEquals("录制")) {
-                mBtnRecord.setText("停止");
-                OpenPcmFiles();
-                // 启动录音
-                if (!mCapturer.isCaptureStarted()) {
-                    mCapturer.startCapture();
-                }
+                stopPlay();
+                startRecord();
             } else if (mBtnRecord.getText().toString().contentEquals("停止")) {
-                mBtnRecord.setText("录制");
-                // 停止录音
-                if (mCapturer.isCaptureStarted()) {
-                    mCapturer.stopCapture();
-                }
-                try {
-                    mOsEffect.close();
-                    mOsSpeech.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                stopRecord();
             }
         } else if (id == R.id.btn_play) {
             if (mBtnPlay.getText().toString().contentEquals("试听")) {
-                mBtnPlay.setText("停止");
-                mIsPlaying = true;
-                mThread = new Thread(new WorkRunnable());
-                mThread.setPriority(Thread.MAX_PRIORITY);
-                mThread.start();
+                stopRecord();
+                startPlay();
             } else if (mBtnPlay.getText().toString().contentEquals("停止")) {
-                mBtnPlay.setText("试听");
-                mIsPlaying = false;
-                if (mThread.isAlive()) {
-                    try {
-                        mThread.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
+                stopPlay();
             }
         } else if (id == R.id.btn_ns) {
             if (mBtnNsSwitch.getText().toString().contentEquals("打开降噪")) {
