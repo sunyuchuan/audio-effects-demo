@@ -8,6 +8,7 @@
 #include "effect_struct.h"
 #include "error_def.h"
 #include "logger.h"
+#include "tools/util.h"
 #include "voice_morph/morph_core.h"
 
 typedef struct {

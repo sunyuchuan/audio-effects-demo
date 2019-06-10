@@ -15,6 +15,7 @@
 #include "noise_suppression/tables.h"
 #include "tools/conversion.h"
 #include "tools/fifo.h"
+#include "tools/util.h"
 
 #define DC_REDUCTION
 

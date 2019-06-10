@@ -8,6 +8,7 @@
 #include "math/spl_math.h"
 #include "tools/fifo.h"
 #include "tools/sdl_mutex.h"
+#include "tools/util.h"
 
 #define FRAME_LEN 1024
 #define MAX_INPUT_FRAME_NUM 8

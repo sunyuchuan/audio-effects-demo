@@ -15,6 +15,7 @@
 #include "tools/fifo.h"
 #include "tools/mem.h"
 #include "tools/sdl_mutex.h"
+#include "tools/util.h"
 
 #define MIN_BUFFER_SIZE 2048
 #define SAMPLE_RATE 44100

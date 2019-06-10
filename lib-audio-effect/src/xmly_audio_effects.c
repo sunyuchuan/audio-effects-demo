@@ -4,6 +4,7 @@
 #include <string.h>
 #include "effects.h"
 #include "logger.h"
+#include "tools/util.h"
 
 enum EffectType {
     NoiseSuppression = 0,

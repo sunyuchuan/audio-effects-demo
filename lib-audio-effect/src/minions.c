@@ -6,6 +6,7 @@
 #include "resample/resample.h"
 #include "tables/recip_table.h"
 #include "tools/fifo.h"
+#include "tools/util.h"
 
 #define SRC_SAMPLE_RATE 44100
 #define DST_SAMPLE_RATE 25200

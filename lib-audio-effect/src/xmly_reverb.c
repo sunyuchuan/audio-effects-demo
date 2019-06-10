@@ -8,6 +8,7 @@
 #include "math/spl_math.h"
 #include "tools/fifo.h"
 #include "tools/sdl_mutex.h"
+#include "tools/util.h"
 
 #define COMB_NUM 8
 #define ALLPASS_NUM 4
