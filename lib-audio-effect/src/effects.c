@@ -8,6 +8,7 @@
 #include "effect_struct.h"
 #include "error_def.h"
 #include "tools/mem.h"
+#include "tools/util.h"
 
 #define EFFECT(f) extern const EffectHandler *effect_##f##_fn(void);
 #include "effect_name.h"

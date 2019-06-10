@@ -13,11 +13,12 @@ int main(int argc, char **argv) {
     }
 
     int ret = 0;
-    int buffer_size = 1024;
+    size_t buffer_size = 1024;
     short buffer[buffer_size];
     size_t count = 0;
     FILE *pcm_reader = NULL;
     FILE *pcm_writer = NULL;
+    EffectContext *ctx = NULL;
     struct timeval start;
     struct timeval end;
     unsigned long timer;
@@ -30,7 +31,7 @@ int main(int argc, char **argv) {
     ret = OpenFile(&pcm_writer, argv[2], 1);
     if (ret < 0) goto end;
 
-    EffectContext *ctx = create_effect(find_effect("voice_morph"));
+    ctx = create_effect(find_effect("voice_morph"));
     ret = init_effect(ctx, 0, NULL);
     if (ret < 0) goto end;
 

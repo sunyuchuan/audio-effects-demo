@@ -3,8 +3,16 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/syscall.h>
 #include <unistd.h>
+
+#ifdef __APPLE__
+    #include <sys/types.h>
+    #include <unistd.h>
+    #define gettid() getpid()
+#elif __linux__
+    #include <sys/syscall.h>
+    #define gettid() syscall(SYS_gettid)
+#endif
 
 #ifdef __ANDROID__
 #include <android/log.h>
@@ -36,7 +44,7 @@
 #define WHITE "\e[1;37m"
 
 #define MAX_BUFFER_SIZE 400
-#define gettid() syscall(__NR_gettid)
+
 
 static enum AeLogWriterMode ae_log_mode = kLogModeNone;
 static enum AeLogWriterLevel ae_log_level = kLogLevelError;
@@ -59,14 +67,14 @@ static char *GetCurrentTime() {
 
 static void Write2File(const char level, const char *info, va_list vl) {
     if (NULL == ae_log_file) return;
-    sprintf(ae_buffer, "%s %d-%ld/%c/", GetCurrentTime(), getpid(), gettid(),
+    sprintf(ae_buffer, "%s %d-%d/%c/", GetCurrentTime(), getpid(), gettid(),
             level);
     vsprintf(ae_buffer + strlen(ae_buffer), info, vl);
     vfprintf(ae_log_file, ae_buffer, vl);
 }
 
 static void Log2Screen(const char level, const char *info, va_list vl) {
-    sprintf(ae_buffer, "%s %d-%ld/%c/", GetCurrentTime(), getpid(), gettid(),
+    sprintf(ae_buffer, "%s %d-%d/%c/", GetCurrentTime(), getpid(), gettid(),
             level);
     vsprintf(ae_buffer + strlen(ae_buffer), info, vl);
     switch (level) {

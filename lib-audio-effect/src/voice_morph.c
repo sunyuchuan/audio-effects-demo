@@ -69,7 +69,6 @@ static int voice_morph_set(EffectContext *ctx, const char *key, int flags) {
     AeLogI("voice_morph.c:%d %s.\n", __LINE__, __func__);
     assert(NULL != ctx);
 
-    priv_t *priv = ctx->priv;
     AEDictionaryEntry *entry = ae_dict_get(ctx->options, key, NULL, flags);
     if (entry) {
         AeLogI("key = %s val = %s\n", entry->key, entry->value);

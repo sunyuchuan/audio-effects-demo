@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
     fifo *f = fifo_create(sizeof(short));
 
     for (int i = 0; i < 10; ++i) {
-        for (int j = 0; j < buffer_size; ++j) {
+        for (size_t j = 0; j < buffer_size; ++j) {
             buffer[j] = i * j;
         }
         ret = fifo_write(f, buffer, buffer_size);

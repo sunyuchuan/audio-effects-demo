@@ -2,13 +2,13 @@
 #include <stdint.h>
 #include <string.h>
 #include <sys/time.h>
-#include <termio.h>
 #include <unistd.h>
 #include "effects.h"
 #include "file_helper.h"
 #include "logger.h"
-#include "xmly_audio_effects.h"
-
+#include "xmly_audio_effects.h" 
+#include <unistd.h>
+#include <termios.h>
 #define MAX_NB_MSG 10
 
 typedef struct {
@@ -196,6 +196,7 @@ static int scan_keyboard() {
     in = getchar();
 
     tcsetattr(0, TCSANOW, &stored_settings);
+
     printf(" key down %d\n", in);
     return in;
 }

@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
     }
 
     int ret = 0;
-    int buffer_size = 1024;
+    size_t buffer_size = 1024;
     short buffer[buffer_size];
     FILE *pcm_reader = NULL;
     FILE *pcm_writer = NULL;
