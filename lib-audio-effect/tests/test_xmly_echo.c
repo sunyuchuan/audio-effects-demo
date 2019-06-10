@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
     if (ret < 0) goto end;
 
     // 设置回声场景
-    set_effect(ctx, "echo_mode", "classroom", 0);
+    set_effect(ctx, "mode", "Classroom", 0);
 
     while (buffer_size ==
            fread(buffer, sizeof(short), buffer_size, pcm_reader)) {

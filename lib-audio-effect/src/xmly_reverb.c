@@ -143,8 +143,7 @@ static void reverb_set_mode(priv_t *priv, const char *mode) {
     sdl_mutex_lock(priv->sdl_mutex);
 
     priv->is_reverb_on = 1;
-    short mode_length = strlen(mode);
-    if (mode_length >= 3 && 0 == strncmp(mode, "KTV", 3)) {
+    if (0 == strcasecmp(mode, "KTV")) {
         AeLogI("xmly_reverb.c:%d %s KTV.\n", __LINE__, __func__);
         priv->comb_buf_len[0] = 316;
         priv->comb_buf_len[1] = 388;
@@ -158,7 +157,7 @@ static void reverb_set_mode(priv_t *priv, const char *mode) {
         priv->allpass_buf_len[1] = 2500;
         priv->allpass_buf_len[2] = 3000;
         priv->allpass_buf_len[3] = 3500;
-    } else if (mode_length >= 4 && 0 == strncmp(mode, "LIVE", 4)) {
+    } else if (0 == strcasecmp(mode, "LIVE")) {
         AeLogI("xmly_reverb.c:%d %s LIVE.\n", __LINE__, __func__);
         priv->comb_buf_len[0] = 916;
         priv->comb_buf_len[1] = 988;
@@ -172,7 +171,7 @@ static void reverb_set_mode(priv_t *priv, const char *mode) {
         priv->allpass_buf_len[1] = 2500;
         priv->allpass_buf_len[2] = 3000;
         priv->allpass_buf_len[3] = 3500;
-    } else if (mode_length >= 9 && 0 == strncmp(mode, "SMALL_ROOM", 9)) {
+    } else if (0 == strcasecmp(mode, "SMALL_ROOM")) {
         AeLogI("xmly_reverb.c:%d %s SMALL_ROOM.\n", __LINE__, __func__);
         priv->comb_buf_len[0] = 616;
         priv->comb_buf_len[1] = 688;
@@ -214,11 +213,9 @@ static int xmly_reverb_set(EffectContext *ctx, const char *key, int flags) {
     AEDictionaryEntry *entry = ae_dict_get(ctx->options, key, NULL, flags);
     if (entry) {
         AeLogI("key = %s val = %s\n", entry->key, entry->value);
-        short value_length = strlen(entry->key);
-        if (value_length >= 11 && 0 == strncmp(entry->key, "reverb_mode", 11)) {
+        if (0 == strcasecmp(entry->key, "mode")) {
             reverb_set_mode(priv, entry->value);
-        } else if (value_length >= 9 &&
-                   0 == strncmp(entry->key, "room_size", 9)) {
+        } else if (0 == strcasecmp(entry->key, "room_size")) {
             float room_size = atof(entry->value);
             room_size = FFMIN(1.0, FFMAX(0.0, room_size));
             short tmp = room_size * 32767;

@@ -215,16 +215,19 @@ end:
 }
 
 static int minions_set(EffectContext *ctx, const char *key, int flags) {
-    AeLogI("noise_suppression.c:%d %s.\n", __LINE__, __func__);
+    AeLogI("minions.c:%d %s.\n", __LINE__, __func__);
     assert(NULL != ctx);
 
     priv_t *priv = ctx->priv;
     AEDictionaryEntry *entry = ae_dict_get(ctx->options, key, NULL, flags);
     if (entry) {
         AeLogI("key = %s val = %s\n", entry->key, entry->value);
-        if (strlen(entry->key) >= 10 &&
-            0 == strncmp(entry->key, "minions_on", 10)) {
-            priv->is_minions_on = atoi(entry->value);
+        if (0 == strcasecmp(entry->key, "Switch")) {
+            if (0 == strcasecmp(entry->value, "On")) {
+                priv->is_minions_on = 1;
+            } else if (0 == strcasecmp(entry->value, "Off")) {
+                priv->is_minions_on = 0;
+            }
         }
     }
     return 0;

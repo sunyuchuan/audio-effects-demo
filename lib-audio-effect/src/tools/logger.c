@@ -11,7 +11,7 @@
     #define gettid() getpid()
 #elif __linux__
     #include <sys/syscall.h>
-    #define gettid() syscall(SYS_gettid)
+    #define gettid() syscall(__NR_gettid)
 #endif
 
 #ifdef __ANDROID__

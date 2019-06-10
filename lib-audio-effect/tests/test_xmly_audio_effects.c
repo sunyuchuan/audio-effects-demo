@@ -2,13 +2,12 @@
 #include <stdint.h>
 #include <string.h>
 #include <sys/time.h>
+#include <termios.h>
 #include <unistd.h>
 #include "effects.h"
 #include "file_helper.h"
 #include "logger.h"
-#include "xmly_audio_effects.h" 
-#include <unistd.h>
-#include <termios.h>
+#include "xmly_audio_effects.h"
 #define MAX_NB_MSG 10
 
 typedef struct {
@@ -71,6 +70,10 @@ static void show_menu() {
     printf("Q.原声              W.机器人\n");
     printf("E.小黄人            R.明亮\n");
     printf("T.男声              Y.女声\n");
+    printf("A.原声              S.清澈\n");
+    printf("D.低音              F.低沉\n");
+    printf("G.穿透              H.磁性\n");
+    printf("J.柔和              K.收音机\n");
     printf("Esc.退出\n");
     printf("======================================================\n\n");
 }
@@ -132,6 +135,38 @@ static int process_message(XmlyEffectContext *ctx) {
         case 121:  // 按下 Y
             AeLogI("Morph = Women\n");
             ret = set_xmly_effect(ctx, "Morph", "Women", 0);
+            break;
+        case 97:  // 按下 A
+            AeLogI("Equalizer = None\n");
+            ret = set_xmly_effect(ctx, "Equalizer", "None", 0);
+            break;
+        case 115:  // 按下 S
+            AeLogI("Equalizer = CleanVoice\n");
+            ret = set_xmly_effect(ctx, "Equalizer", "CleanVoice", 0);
+            break;
+        case 100:  // 按下 D
+            AeLogI("Equalizer = Bass\n");
+            ret = set_xmly_effect(ctx, "Equalizer", "Bass", 0);
+            break;
+        case 102:  // 按下 F
+            AeLogI("Equalizer = LowVoice\n");
+            ret = set_xmly_effect(ctx, "Equalizer", "LowVoice", 0);
+            break;
+        case 103:  // 按下 G
+            AeLogI("Equalizer = Penetrating\n");
+            ret = set_xmly_effect(ctx, "Equalizer", "Penetrating", 0);
+            break;
+        case 104:  // 按下 H
+            AeLogI("Equalizer = Magnetic\n");
+            ret = set_xmly_effect(ctx, "Equalizer", "Magnetic", 0);
+            break;
+        case 106:  // 按下 J
+            AeLogI("Equalizer = SoftPitch\n");
+            ret = set_xmly_effect(ctx, "Equalizer", "SoftPitch", 0);
+            break;
+        case 107:  // 按下 K
+            AeLogI("Equalizer = OldRadio\n");
+            ret = set_xmly_effect(ctx, "Equalizer", "OldRadio", 0);
             break;
         default:
             break;

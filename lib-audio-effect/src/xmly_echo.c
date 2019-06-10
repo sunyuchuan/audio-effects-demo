@@ -104,19 +104,18 @@ static void set_delay(priv_t *priv, int delay) {
 }
 
 static void echo_set_mode(priv_t *priv, const char *mode) {
-    int mode_length = strlen(mode);
-    if (mode_length >= 7 && 0 == strncmp(mode, "no_echo", 7)) {
+    if (0 == strcasecmp(mode, "None")) {
         priv->is_echo_on = 0;
         return;
     }
 
     int delay = 0;
     priv->is_echo_on = 1;
-    if (mode_length >= 9 && 0 == strncmp(mode, "classroom", 9)) {
+    if (0 == strcasecmp(mode, "Classroom")) {
         delay = 1;
-    } else if (mode_length >= 6 && 0 == strncmp(mode, "church", 6)) {
+    } else if (0 == strcasecmp(mode, "Church")) {
         delay = 3;
-    } else if (mode_length >= 6 && 0 == strncmp(mode, "valley", 6)) {
+    } else if (0 == strcasecmp(mode, "Valley")) {
         delay = 15;
     }
     set_delay(priv, delay);
@@ -130,8 +129,7 @@ static int xmly_echo_set(EffectContext *ctx, const char *key, int flags) {
     AEDictionaryEntry *entry = ae_dict_get(ctx->options, key, NULL, flags);
     if (entry) {
         AeLogI("key = %s val = %s\n", entry->key, entry->value);
-        if (strlen(entry->key) >= 9 &&
-            0 == strncmp(entry->key, "echo_mode", 9)) {
+        if (0 == strcasecmp(entry->key, "mode")) {
             echo_set_mode(priv, entry->value);
         }
     }

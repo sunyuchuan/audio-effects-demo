@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
     ret = init_effect(ctx, 0, NULL);
     if (ret < 0) goto end;
 
-    set_effect(ctx, "minions_on", "1", 0);
+    set_effect(ctx, "Switch", "On", 0);
 
     while (buffer_size ==
            fread(buffer, sizeof(short), buffer_size, pcm_reader)) {

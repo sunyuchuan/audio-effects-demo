@@ -124,33 +124,30 @@ static int noise_suppression_set(EffectContext *ctx, const char *key,
     AEDictionaryEntry *entry = ae_dict_get(ctx->options, key, NULL, flags);
     if (entry) {
         AeLogI("key = %s val = %s\n", entry->key, entry->value);
-        short key_length = strlen(entry->key);
-        if (key_length >= 13 && 0 == strncmp(entry->key, "low2mid_in_Hz", 13)) {
+        if (0 == strcasecmp(entry->key, "low2mid_in_Hz")) {
             priv->bandwidth_low2mid =
                 atoi(entry->value) * ACTUAL_LEN / SAMPLE_RATE_IN_HZ;
-        } else if (key_length >= 14 &&
-                   0 == strncmp(entry->key, "mid2high_in_Hz", 14)) {
+        } else if (0 == strcasecmp(entry->key, "mid2high_in_Hz")) {
             priv->bandwidth_mid2high =
                 atoi(entry->value) * ACTUAL_LEN / SAMPLE_RATE_IN_HZ;
-        } else if (key_length >= 23 &&
-                   0 == strncmp(entry->key, "all_band_gain_threshold", 23)) {
+        } else if (0 == strcasecmp(entry->key, "all_band_gain_threshold")) {
             priv->gain_threshold_all = atof(entry->value);
-        } else if (key_length >= 8 && 0 == strncmp(entry->key, "low_gain", 8)) {
+        } else if (0 == strcasecmp(entry->key, "low_gain")) {
             priv->gain_threshold_low = atof(entry->value);
-        } else if (key_length >= 8 && 0 == strncmp(entry->key, "mid_gain", 8)) {
+        } else if (0 == strcasecmp(entry->key, "mid_gain")) {
             priv->gain_threshold_mid = atof(entry->value);
-        } else if (key_length >= 9 &&
-                   0 == strncmp(entry->key, "high_gain", 9)) {
+        } else if (0 == strcasecmp(entry->key, "high_gain")) {
             priv->gain_threshold_high = atof(entry->value);
-        } else if (key_length >= 13 &&
-                   0 == strncmp(entry->key, "mid_freq_gain", 13)) {
+        } else if (0 == strcasecmp(entry->key, "mid_freq_gain")) {
             priv->mid_freq_gain = atof(entry->value);
-        } else if (key_length >= 19 &&
-                   0 == strncmp(entry->key, "is_enhance_mid_freq", 19)) {
+        } else if (0 == strcasecmp(entry->key, "is_enhance_mid_freq")) {
             priv->is_enhance_mid_freq = atoi(entry->value);
-        } else if (key_length >= 24 &&
-                   0 == strncmp(entry->key, "noise_suppression_switch", 24)) {
-            priv->is_noise_suppression_on = atoi(entry->value);
+        } else if (0 == strcasecmp(entry->key, "Switch")) {
+            if (0 == strcasecmp(entry->value, "Off")) {
+                priv->is_noise_suppression_on = 0;
+            } else if (0 == strcasecmp(entry->value, "On")) {
+                priv->is_noise_suppression_on = 1;
+            }
         }
     }
     return 0;

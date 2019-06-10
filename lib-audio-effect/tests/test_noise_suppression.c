@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
     /****************************************************/
 
     // 设置降噪开关
-    set_effect(ctx, "noise_suppression_switch", "1", 0);
+    set_effect(ctx, "Switch", "On", 0);
 
     while (buffer_size ==
            fread(buffer, sizeof(short), buffer_size, pcm_reader)) {

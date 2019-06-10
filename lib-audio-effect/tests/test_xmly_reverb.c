@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
     if (ret < 0) goto end;
 
     // 设置混响场景
-    set_effect(ctx, "reverb_mode", "LIVE", 0);
+    set_effect(ctx, "mode", "LIVE", 0);
     // set_effect(ctx, "room_size", "0.75", 0);
 
     while (buffer_size ==

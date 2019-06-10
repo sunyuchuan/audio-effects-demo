@@ -46,20 +46,19 @@ end:
 }
 
 static void voice_morph_set_mode(priv_t *priv, const char *mode) {
-    int mode_length = strlen(mode);
-    if (mode_length >= 8 && 0 == strncmp(mode, "original", 8)) {
+    if (0 == strcasecmp(mode, "original")) {
         AeLogI("voice_morph.c:%d %s set original.\n", __LINE__, __func__);
         morph_core_set_type(priv->morph, ORIGINAL);
-    } else if (mode_length >= 6 && 0 == strncmp(mode, "bright", 6)) {
+    } else if (0 == strcasecmp(mode, "bright")) {
         AeLogI("voice_morph.c:%d %s set bright.\n", __LINE__, __func__);
         morph_core_set_type(priv->morph, BRIGHT);
-    } else if (mode_length >= 5 && 0 == strncmp(mode, "robot", 5)) {
+    } else if (0 == strcasecmp(mode, "robot")) {
         AeLogI("voice_morph.c:%d %s set robot.\n", __LINE__, __func__);
         morph_core_set_type(priv->morph, ROBOT);
-    } else if (mode_length >= 3 && 0 == strncmp(mode, "man", 3)) {
+    } else if (0 == strcasecmp(mode, "man")) {
         AeLogI("voice_morph.c:%d %s set man.\n", __LINE__, __func__);
         morph_core_set_type(priv->morph, MAN);
-    } else if (mode_length >= 5 && 0 == strncmp(mode, "women", 5)) {
+    } else if (0 == strcasecmp(mode, "women")) {
         AeLogI("voice_morph.c:%d %s set women.\n", __LINE__, __func__);
         morph_core_set_type(priv->morph, WOMEN);
     }
@@ -72,8 +71,7 @@ static int voice_morph_set(EffectContext *ctx, const char *key, int flags) {
     AEDictionaryEntry *entry = ae_dict_get(ctx->options, key, NULL, flags);
     if (entry) {
         AeLogI("key = %s val = %s\n", entry->key, entry->value);
-        int key_length = strlen(entry->key);
-        if (key_length >= 4 && 0 == strncmp(entry->key, "mode", 4)) {
+        if (0 == strcasecmp(entry->key, "mode")) {
             voice_morph_set_mode(ctx->priv, entry->value);
         }
     }

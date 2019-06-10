@@ -202,29 +202,24 @@ static void equalizer_set_mode(priv_t *priv, const char *mode) {
     }
     priv->is_equalizer_on = 1;
 
-    short mode_length = strlen(mode);
-    if (mode_length >= 4 && 0 == strncmp(mode, "None", 4)) {
+    if (0 == strcasecmp(mode, "None")) {
         priv->is_equalizer_on = 0;
-    } else if (mode_length >= 8 && 0 == strncmp(mode, "OldRadio", 8)) {
+    } else if (0 == strcasecmp(mode, "OldRadio")) {
         create_old_radio(priv);
-    } else if (mode_length >= 10 && 0 == strncmp(mode, "CleanVoice", 10)) {
+    } else if (0 == strcasecmp(mode, "CleanVoice")) {
         create_clean_voice(priv);
-    }
-    if (mode_length >= 4 && 0 == strncmp(mode, "Bass", 4)) {
+    } else if (0 == strcasecmp(mode, "Bass")) {
         create_bass_effect(priv);
-    }
-    if (mode_length >= 8 && 0 == strncmp(mode, "LowVoice", 8)) {
+    } else if (0 == strcasecmp(mode, "LowVoice")) {
         create_low_voice(priv);
-    }
-    if (mode_length >= 11 && 0 == strncmp(mode, "Penetrating", 11)) {
+    } else if (0 == strcasecmp(mode, "Penetrating")) {
         create_penetrating_effect(priv);
-    }
-    if (mode_length >= 8 && 0 == strncmp(mode, "Magnetic", 8)) {
+    } else if (0 == strcasecmp(mode, "Magnetic")) {
         create_magnetic_effect(priv);
-    }
-    if (mode_length >= 9 && 0 == strncmp(mode, "SoftPitch", 9)) {
+    } else if (0 == strcasecmp(mode, "SoftPitch")) {
         create_soft_pitch(priv);
     }
+
     sdl_mutex_unlock(priv->sdl_mutex);
 }
 
@@ -232,8 +227,7 @@ static int equalizer_set(EffectContext *ctx, const char *key, int flags) {
     AeLogI("equalizer.c:%d %s key = %s.\n", __LINE__, __func__, key);
     AEDictionaryEntry *entry = ae_dict_get(ctx->options, key, NULL, flags);
     if (entry) {
-        int key_length = strlen(entry->key);
-        if (key_length >= 4 && 0 == strncmp(entry->key, "mode", 4)) {
+        if (0 == strcasecmp(entry->key, "mode")) {
             equalizer_set_mode(ctx->priv, entry->value);
         }
     }

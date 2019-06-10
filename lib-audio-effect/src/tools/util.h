@@ -2,6 +2,10 @@
 #define AUDIO_EFFECT_UTIL_H
 #include <stddef.h>
 
+#ifdef __linux__
+#define HAVE_STRCASECMP 1
+#endif
+
 extern int ae_strcasecmp(const char *s1, const char *st);
 extern int ae_strncasecmp(char const *s1, char const *s2, size_t n);
 
