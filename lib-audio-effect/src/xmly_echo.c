@@ -95,13 +95,11 @@ end:
 }
 
 static void set_delay(priv_t *priv, int delay) {
-    sdl_mutex_lock(priv->sdl_mutex);
     priv->delay_frame_num = FFMAX(0, FFMIN(MAX_DELAY_FRAME_NUM, delay));
     for (int i = 0; i < MAX_ECHO_LEVEL; i++) {
         memset(priv->delay_buf[i], 0, sizeof(int16_t) * MAX_DELAY_BUFFER_LEN);
         priv->res_len[i] = priv->delay_frame_num * (i + 1) * FRAME_LEN;
     }
-    sdl_mutex_unlock(priv->sdl_mutex);
 }
 
 static void echo_set_mode(priv_t *priv, const char *mode) {
@@ -130,9 +128,12 @@ static int xmly_echo_set(EffectContext *ctx, const char *key, int flags) {
     AEDictionaryEntry *entry = ae_dict_get(ctx->options, key, NULL, flags);
     if (entry) {
         AeLogI("key = %s val = %s\n", entry->key, entry->value);
+
+        sdl_mutex_lock(priv->sdl_mutex);
         if (0 == strcasecmp(entry->key, "mode")) {
             echo_set_mode(priv, entry->value);
         }
+        sdl_mutex_unlock(priv->sdl_mutex);
     }
     return 0;
 }
@@ -155,8 +156,8 @@ static int xmly_echo_receive(EffectContext *ctx, void *samples,
     assert(NULL != priv->fifo_in);
     assert(max_nb_samples < MAX_INPUT_SAMPLE_NUM);
 
+    sdl_mutex_lock(priv->sdl_mutex);
     if (priv->is_echo_on) {
-        sdl_mutex_lock(priv->sdl_mutex);
         size_t nb_samples = fifo_read(priv->fifo_in, samples, max_nb_samples);
         for (size_t i = 0; i < MAX_ECHO_LEVEL; ++i) {
             memcpy(priv->delay_buf[i] + priv->res_len[i], samples,
@@ -183,7 +184,6 @@ static int xmly_echo_receive(EffectContext *ctx, void *samples,
                     sizeof(int16_t) * (priv->res_len[i] - nb_samples));
             priv->res_len[i] -= nb_samples;
         }
-        sdl_mutex_unlock(priv->sdl_mutex);
     } else {
         while (fifo_occupancy(priv->fifo_in) > 0) {
             size_t nb_samples =
@@ -191,6 +191,8 @@ static int xmly_echo_receive(EffectContext *ctx, void *samples,
             fifo_write(priv->fifo_out, samples, nb_samples);
         }
     }
+    sdl_mutex_unlock(priv->sdl_mutex);
+
     return fifo_read(priv->fifo_out, samples, max_nb_samples);
 }
 

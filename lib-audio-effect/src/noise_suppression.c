@@ -15,6 +15,7 @@
 #include "noise_suppression/tables.h"
 #include "tools/conversion.h"
 #include "tools/fifo.h"
+#include "tools/sdl_mutex.h"
 #include "tools/util.h"
 
 #define DC_REDUCTION
@@ -23,6 +24,7 @@ typedef struct {
     NoiseEstimation *noise_est;
     fifo *fifo_in;
     fifo *fifo_out;
+    SdlMutex *sdl_mutex;
     float fft_array[FFT_LEN];
     float ns_ps[ACTUAL_LEN];
     float flp_pcm[FRAME_LEN];
@@ -55,6 +57,7 @@ static int noise_suppression_close(EffectContext *ctx) {
         if (priv->noise_est) NoiseEstimationFree(&priv->noise_est);
         if (priv->fifo_in) fifo_delete(&priv->fifo_in);
         if (priv->fifo_out) fifo_delete(&priv->fifo_out);
+        if (priv->sdl_mutex) sdl_mutex_free(&priv->sdl_mutex);
     }
     return 0;
 }
@@ -108,6 +111,11 @@ static int noise_suppression_init(EffectContext *ctx, int argc, char **argv) {
         ret = AEERROR_NOMEM;
         goto end;
     }
+    priv->sdl_mutex = sdl_mutex_create();
+    if (NULL == priv->sdl_mutex) {
+        ret = AEERROR_NOMEM;
+        goto end;
+    }
 
     init_self_parameter(priv);
 
@@ -125,6 +133,8 @@ static int noise_suppression_set(EffectContext *ctx, const char *key,
     AEDictionaryEntry *entry = ae_dict_get(ctx->options, key, NULL, flags);
     if (entry) {
         AeLogI("key = %s val = %s\n", entry->key, entry->value);
+
+        sdl_mutex_lock(priv->sdl_mutex);
         if (0 == strcasecmp(entry->key, "low2mid_in_Hz")) {
             priv->bandwidth_low2mid =
                 atoi(entry->value) * ACTUAL_LEN / SAMPLE_RATE_IN_HZ;
@@ -150,6 +160,7 @@ static int noise_suppression_set(EffectContext *ctx, const char *key,
                 priv->is_noise_suppression_on = 1;
             }
         }
+        sdl_mutex_unlock(priv->sdl_mutex);
     }
     return 0;
 }
@@ -300,6 +311,7 @@ static int noise_suppression_receive(EffectContext *ctx, void *samples,
     assert(NULL != priv);
     assert(NULL != priv->fifo_out);
 
+    sdl_mutex_lock(priv->sdl_mutex);
     if (priv->is_noise_suppression_on) {
         while (fifo_occupancy(priv->fifo_in) >= FRAME_LEN) {
             memmove(priv->raw_pcm, priv->raw_pcm + FRAME_LEN,
@@ -335,6 +347,7 @@ static int noise_suppression_receive(EffectContext *ctx, void *samples,
             fifo_write(priv->fifo_out, priv->fixed_pcm, nb_samples);
         }
     }
+    sdl_mutex_unlock(priv->sdl_mutex);
 
     // 读取原始数据
     return fifo_read(priv->fifo_out, samples, max_nb_samples);
@@ -342,17 +355,7 @@ static int noise_suppression_receive(EffectContext *ctx, void *samples,
 
 const EffectHandler *effect_noise_suppression_fn(void) {
     static EffectHandler handler = {.name = "noise_suppression",
-                                    .usage =
-                                        "noise_suppression \
-[ --low2mid_in_Hz ] \
-[ --mid2high_in_Hz ] \
-[ --all_band_gain_threshold ] \
-[ --low_gain ] \
-[ --mid_gain ] \
-[ --high_gain ] \
-[ --mid_freq_gain ] \
-[ --is_enhance_mid_freq ] \
-[ --is_noise_suppression_on ]\n",
+                                    .usage = "",
                                     .priv_size = sizeof(priv_t),
                                     .init = noise_suppression_init,
                                     .set = noise_suppression_set,

@@ -6,12 +6,12 @@
 #include <unistd.h>
 
 #ifdef __APPLE__
-    #include <sys/types.h>
-    #include <unistd.h>
-    #define gettid() getpid()
+#include <sys/types.h>
+#include <unistd.h>
+#define gettid() getpid()
 #elif __linux__
-    #include <sys/syscall.h>
-    #define gettid() syscall(__NR_gettid)
+#include <sys/syscall.h>
+#define gettid() syscall(__NR_gettid)
 #endif
 
 #ifdef __ANDROID__
@@ -44,7 +44,6 @@
 #define WHITE "\e[1;37m"
 
 #define MAX_BUFFER_SIZE 400
-
 
 static enum AeLogWriterMode ae_log_mode = kLogModeNone;
 static enum AeLogWriterLevel ae_log_level = kLogLevelError;

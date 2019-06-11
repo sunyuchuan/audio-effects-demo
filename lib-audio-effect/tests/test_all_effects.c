@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
 
     // 创建多个音效
     memset(effects, 0, nb_effects * sizeof(EffectContext *));
-    effects[0] = create_effect(find_effect("echo"));
+    effects[0] = create_effect(find_effect("xmly_echo"));
     effects[1] = create_effect(find_effect("equalizer"));
 
     for (size_t i = 0; i < nb_effects; ++i) {
@@ -43,7 +43,9 @@ int main(int argc, char **argv) {
     }
 
     // 设置音效模式
-    ret = set_effect(effects[1], "mode", "old_radio", 0);
+    ret = set_effect(effects[0], "mode", "Valley", 0);
+    if (ret < 0) goto end;
+    ret = set_effect(effects[1], "mode", "OldRadio", 0);
     if (ret < 0) goto end;
 
     // 音效处理

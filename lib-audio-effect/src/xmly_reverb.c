@@ -141,8 +141,6 @@ end:
 
 static void reverb_set_mode(priv_t *priv, const char *mode) {
     AeLogI("xmly_reverb.c:%d %s.\n", __LINE__, __func__);
-    sdl_mutex_lock(priv->sdl_mutex);
-
     priv->is_reverb_on = 1;
     if (0 == strcasecmp(mode, "KTV")) {
         AeLogI("xmly_reverb.c:%d %s KTV.\n", __LINE__, __func__);
@@ -202,8 +200,6 @@ static void reverb_set_mode(priv_t *priv, const char *mode) {
         priv->allpass_buf_len[2] = 220;
         priv->allpass_buf_len[3] = 270;
     }
-    sdl_mutex_unlock(priv->sdl_mutex);
-    AeLogI("xmly_reverb.c:%d %s end.\n", __LINE__, __func__);
 }
 
 static int xmly_reverb_set(EffectContext *ctx, const char *key, int flags) {
@@ -214,6 +210,7 @@ static int xmly_reverb_set(EffectContext *ctx, const char *key, int flags) {
     AEDictionaryEntry *entry = ae_dict_get(ctx->options, key, NULL, flags);
     if (entry) {
         AeLogI("key = %s val = %s\n", entry->key, entry->value);
+        sdl_mutex_lock(priv->sdl_mutex);
         if (0 == strcasecmp(entry->key, "mode")) {
             reverb_set_mode(priv, entry->value);
         } else if (0 == strcasecmp(entry->key, "room_size")) {
@@ -224,6 +221,7 @@ static int xmly_reverb_set(EffectContext *ctx, const char *key, int flags) {
                 (tmp * SCALE_ROOM + (int)(OFFSET_ROOM << 15)) >> 15;
             AeLogI("comb_feedback = %d\n", priv->comb_feedback);
         }
+        sdl_mutex_unlock(priv->sdl_mutex);
     }
     return 0;
 }
@@ -246,9 +244,8 @@ static int xmly_reverb_receive(EffectContext *ctx, void *samples,
     assert(NULL != priv->fifo_in);
     assert(NULL != priv->fifo_out);
 
+    sdl_mutex_lock(priv->sdl_mutex);
     if (priv->is_reverb_on) {
-        sdl_mutex_lock(priv->sdl_mutex);
-
         size_t nb_samples = fifo_read(priv->fifo_in, samples, max_nb_samples);
         int16_t *x = samples;
         for (size_t i = 0; i < nb_samples; ++i) {
@@ -411,8 +408,6 @@ static int xmly_reverb_receive(EffectContext *ctx, void *samples,
             x[i] = tmp32no3 >> 15;
         }
         fifo_write(priv->fifo_out, samples, nb_samples);
-
-        sdl_mutex_unlock(priv->sdl_mutex);
     } else {
         while (fifo_occupancy(priv->fifo_in) > 0) {
             size_t nb_samples =
@@ -420,6 +415,7 @@ static int xmly_reverb_receive(EffectContext *ctx, void *samples,
             fifo_write(priv->fifo_out, samples, nb_samples);
         }
     }
+    sdl_mutex_unlock(priv->sdl_mutex);
 
     return fifo_read(priv->fifo_out, samples, max_nb_samples);
 }

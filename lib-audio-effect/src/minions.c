@@ -6,6 +6,7 @@
 #include "resample/resample.h"
 #include "tables/recip_table.h"
 #include "tools/fifo.h"
+#include "tools/sdl_mutex.h"
 #include "tools/util.h"
 
 #define SRC_SAMPLE_RATE 44100
@@ -29,6 +30,7 @@ typedef struct {
     fifo *fifo_in;
     fifo *fifo_out;
     fifo *fifo_swr;
+    SdlMutex *sdl_mutex;
     Sola *sola;
     struct SwrContext *swr_ctx;
     uint8_t **src_samples;
@@ -156,6 +158,7 @@ static int minions_close(EffectContext *ctx) {
         if (priv->fifo_in) fifo_delete(&priv->fifo_in);
         if (priv->fifo_out) fifo_delete(&priv->fifo_out);
         if (priv->fifo_swr) fifo_delete(&priv->fifo_swr);
+        if (priv->sdl_mutex) sdl_mutex_free(&priv->sdl_mutex);
         if (priv->sola) sola_free(&priv->sola);
         if (priv->swr_ctx) swr_free(&priv->swr_ctx);
         if (priv->src_samples) {
@@ -195,6 +198,11 @@ static int minions_init(EffectContext *ctx, int argc, char **argv) {
         ret = AEERROR_NOMEM;
         goto end;
     }
+    priv->sdl_mutex = sdl_mutex_create();
+    if (NULL == priv->sdl_mutex) {
+        ret = AEERROR_NOMEM;
+        goto end;
+    }
     priv->sola = (Sola *)calloc(1, sizeof(Sola));
     if (NULL == priv->sola) {
         ret = AEERROR_NOMEM;
@@ -223,6 +231,8 @@ static int minions_set(EffectContext *ctx, const char *key, int flags) {
     AEDictionaryEntry *entry = ae_dict_get(ctx->options, key, NULL, flags);
     if (entry) {
         AeLogI("key = %s val = %s\n", entry->key, entry->value);
+
+        sdl_mutex_lock(priv->sdl_mutex);
         if (0 == strcasecmp(entry->key, "Switch")) {
             if (0 == strcasecmp(entry->value, "On")) {
                 priv->is_minions_on = 1;
@@ -230,6 +240,7 @@ static int minions_set(EffectContext *ctx, const char *key, int flags) {
                 priv->is_minions_on = 0;
             }
         }
+        sdl_mutex_unlock(priv->sdl_mutex);
     }
     return 0;
 }
@@ -251,6 +262,7 @@ static int minions_receive(EffectContext *ctx, void *samples,
     assert(NULL != priv);
     assert(NULL != priv->fifo_in);
 
+    sdl_mutex_lock(priv->sdl_mutex);
     if (priv->is_minions_on) {
         while (fifo_occupancy(priv->fifo_in) >=
                (size_t)priv->sola->analysis_window_offset) {
@@ -282,6 +294,8 @@ static int minions_receive(EffectContext *ctx, void *samples,
             fifo_write(priv->fifo_out, samples, nb_samples);
         }
     }
+    sdl_mutex_unlock(priv->sdl_mutex);
+
     return fifo_read(priv->fifo_out, samples, max_nb_samples);
 }
 

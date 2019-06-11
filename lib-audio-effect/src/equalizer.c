@@ -276,6 +276,8 @@ static int equalizer_receive(EffectContext *ctx, void *samples,
 
     // 读取原始数据
     int ret = fifo_read(priv->f, samples, nb_samples);
+
+    sdl_mutex_lock(priv->sdl_mutex);
     if (priv->is_equalizer_on) {
         if ((size_t)ret > priv->flp_buffer_size) {
             priv->flp_buffer_size = ret;
@@ -288,15 +290,14 @@ static int equalizer_receive(EffectContext *ctx, void *samples,
         S16ToFloat(samples, priv->flp_buffer, ret);
 
         // 均衡器音效处理
-        sdl_mutex_lock(priv->sdl_mutex);
         for (uint16_t i = 0; i < priv->nb_effect_bands; ++i) {
             band_rocess(priv->effect_bands + i, priv->flp_buffer, ret);
         }
-        sdl_mutex_unlock(priv->sdl_mutex);
 
         // 处理后的数据转换成short类型
         FloatToS16(priv->flp_buffer, samples, ret);
     }
+    sdl_mutex_unlock(priv->sdl_mutex);
     return ret;
 }
 

@@ -580,12 +580,9 @@ static int morph_core_init_common(MorphCore* const morph) {
     memset(morph->seg_pitch_primary, 0, sizeof(float) * 7);
     memset(morph->seg_pitch_new, 0, sizeof(float) * 7);
     int src_sample_rate = (int)roundf(morph->formant_ratio * PITCH_SAMPLE_RATE);
-    sdl_mutex_lock(morph->sdl_mutex);
-    int ret =
-        resampler_init(1, 1, src_sample_rate, DST_SAMPLE_RATE,
-                       AV_SAMPLE_FMT_FLT, AV_SAMPLE_FMT_S16, &morph->swr_ctx);
-    sdl_mutex_unlock(morph->sdl_mutex);
-    return ret;
+    return resampler_init(1, 1, src_sample_rate, DST_SAMPLE_RATE,
+                          AV_SAMPLE_FMT_FLT, AV_SAMPLE_FMT_S16,
+                          &morph->swr_ctx);
 }
 
 int morph_core_init(MorphCore* const morph) {
@@ -595,6 +592,7 @@ int morph_core_init(MorphCore* const morph) {
 }
 
 void morph_core_set_type(MorphCore* morph, enum MorphType type) {
+    sdl_mutex_lock(morph->sdl_mutex);
     // 更新变声类型
     morph->morph_type = type;
     morph->is_morph_on = 1;
@@ -620,6 +618,7 @@ void morph_core_set_type(MorphCore* morph, enum MorphType type) {
             break;
     }
     morph_core_init_common(morph);
+    sdl_mutex_unlock(morph->sdl_mutex);
 }
 
 int morph_core_send(MorphCore* morph, const int16_t* samples,
@@ -632,6 +631,7 @@ int morph_core_receive(MorphCore* morph, int16_t* samples,
                        const size_t max_nb_samples) {
     assert(NULL != morph);
 
+    sdl_mutex_lock(morph->sdl_mutex);
     if (morph->is_morph_on) {
         int16_t in_frame_fixed[PITCH_FRAME_SHIFT];
         while (fifo_occupancy(morph->fifo_in) >= PITCH_FRAME_SHIFT) {
@@ -641,11 +641,9 @@ int morph_core_receive(MorphCore* morph, int16_t* samples,
         while (fifo_occupancy(morph->fifo_swr) >= RESAMPLE_FRAME_LEN) {
             fifo_read(morph->fifo_swr, morph->src_samples[0],
                       RESAMPLE_FRAME_LEN);
-            sdl_mutex_lock(morph->sdl_mutex);
             int ret = resample_audio(morph->swr_ctx, morph->src_samples,
                                      RESAMPLE_FRAME_LEN, &morph->dst_samples,
                                      &morph->max_dst_nb_samples, 1);
-            sdl_mutex_unlock(morph->sdl_mutex);
             if (ret > 0)
                 fifo_write(morph->fifo_out, morph->dst_samples[0], ret);
         }
@@ -667,5 +665,7 @@ int morph_core_receive(MorphCore* morph, int16_t* samples,
                        RESAMPLE_FRAME_LEN);
         }
     }
+    sdl_mutex_unlock(morph->sdl_mutex);
+
     return fifo_read(morph->fifo_out, samples, max_nb_samples);
 }
