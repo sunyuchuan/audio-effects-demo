@@ -3,12 +3,12 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include "logger.h"
+#include "log.h"
 
 static const int times = 100;
 void *DebugLogThread(void *arg) {
     for (int i = 0; i < times; ++i) {
-        AeLogD("Debug\n");
+        LogDebug("Debug\n");
         usleep(1000);
     }
     return NULL;
@@ -16,7 +16,7 @@ void *DebugLogThread(void *arg) {
 
 void *InfoLogThread(void *arg) {
     for (int i = 0; i < times; ++i) {
-        AeLogI("Info\n");
+        LogInfo("Info\n");
         usleep(1000);
     }
     return NULL;
@@ -24,7 +24,7 @@ void *InfoLogThread(void *arg) {
 
 void *WaringLogThread(void *arg) {
     for (int i = 0; i < times; ++i) {
-        AeLogW("Waring\n");
+        LogWarning("Waring\n");
         usleep(1000);
     }
     return NULL;
@@ -32,7 +32,7 @@ void *WaringLogThread(void *arg) {
 
 void *ErrorLogThread(void *arg) {
     for (int i = 0; i < times; ++i) {
-        AeLogE("Error\n");
+        LogError("Error\n");
         usleep(1000);
     }
     return NULL;
@@ -50,8 +50,8 @@ int main(int argc, char **argv) {
     gettimeofday(&start, NULL);
 
     AeSetLogPath("TestLog.log");
-    AeSetLogLevel(kLogLevelAll);
-    AeSetLogMode(kLogModeFile);
+    AeSetLogLevel(LOG_LEVEL_TRACE);
+    AeSetLogMode(LOG_MODE_FILE);
 
     ret = pthread_create(&debug_log_tid, NULL, DebugLogThread, NULL);
     if (ret) {
@@ -83,6 +83,6 @@ int main(int argc, char **argv) {
     pthread_join(error_log_tid, NULL);
     gettimeofday(&end, NULL);
     timer = 1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec;
-    AeLogI("time consuming %ld us\n", timer);
+    LogInfo("time consuming %ld us\n", timer);
     return 0;
 }

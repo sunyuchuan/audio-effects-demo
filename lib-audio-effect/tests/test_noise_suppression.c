@@ -1,19 +1,19 @@
 #include <sys/time.h>
 #include "effects.h"
 #include "file_helper.h"
-#include "logger.h"
+#include "log.h"
 
 int main(int argc, char **argv) {
-    AeSetLogLevel(kLogLevelAll);
-    AeSetLogMode(kLogModeScreen);
+    AeSetLogLevel(LOG_LEVEL_TRACE);
+    AeSetLogMode(LOG_MODE_SCREEN);
 
     if (argc < 2) {
-        AeLogW("Usage %s input_pcm_file output_pcm_file\n", argv[0]);
+        LogWarning("Usage %s input_pcm_file output_pcm_file\n", argv[0]);
         return 0;
     }
 
     int ret = 0;
-    size_t buffer_size = 1024;
+    size_t buffer_size = 1023;
     short buffer[buffer_size];
     FILE *pcm_reader = NULL;
     FILE *pcm_writer = NULL;
@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
     ret = init_effect(ctx, 0, NULL);
     if (ret < 0) goto end;
 
-    AeLogW("%s", show_usage(ctx));
+    LogWarning("%s", show_usage(ctx));
 
     /******** 设置参数(可以不设置，采用默认参数) ********/
     set_effect(ctx, "low2mid_in_Hz", "4300", 0);
@@ -46,6 +46,8 @@ int main(int argc, char **argv) {
     set_effect(ctx, "mid_freq_gain", "0.5", 0);
     set_effect(ctx, "is_enhance_mid_freq", "0", 0);
     /****************************************************/
+
+    set_effect(ctx, "return_max_nb_samples", "True", 0);
 
     // 设置降噪开关
     set_effect(ctx, "Switch", "On", 0);
@@ -79,6 +81,6 @@ end:
     }
     gettimeofday(&end, NULL);
     timer = 1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec;
-    AeLogI("time consuming %ld us\n", timer);
+    LogInfo("time consuming %ld us\n", timer);
     return 0;
 }

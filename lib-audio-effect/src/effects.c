@@ -34,6 +34,7 @@ const EffectHandler *find_effect(char const *name) {
 EffectContext *create_effect(const EffectHandler *handler) {
     if (NULL == handler) return NULL;
     EffectContext *self = (EffectContext *)calloc(1, sizeof(EffectContext));
+    atomic_store(&self->return_max_nb_samples, 0);
     self->handler = *handler;
     self->priv = av_mallocz(handler->priv_size);
     return self;
@@ -58,6 +59,12 @@ int init_effect(EffectContext *ctx, int argc, char **argv) {
 int set_effect(EffectContext *ctx, const char *key, const char *value,
                int flags) {
     assert(NULL != ctx);
+    if (0 == strcasecmp(key, "return_max_nb_samples")) {
+        if (0 == strcasecmp(value, "True"))
+            atomic_store(&ctx->return_max_nb_samples, 1);
+        else
+            atomic_store(&ctx->return_max_nb_samples, 0);
+    }
     ae_dict_set(&ctx->options, key, value, flags);
     return ctx->handler.set(ctx, key, flags);
 }

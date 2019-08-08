@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include "effects.h"
 #include "file_helper.h"
-#include "logger.h"
+#include "log.h"
 #include "xmly_audio_effects.h"
 #define MAX_NB_MSG 10
 
@@ -85,87 +85,87 @@ static int process_message(XmlyEffectContext *ctx) {
     int ret = 0;
     switch (msg) {
         case 91:  // 按下 [
-            AeLogI("NoiseSuppression_Switch = 1\n");
+            LogInfo("NoiseSuppression_Switch = 1\n");
             ret = set_xmly_effect(ctx, "NoiseSuppression", "On", 0);
             break;
         case 93:  // 按下 ]
-            AeLogI("NoiseSuppression_Switch = 0\n");
+            LogInfo("NoiseSuppression_Switch = 0\n");
             ret = set_xmly_effect(ctx, "NoiseSuppression", "Off", 0);
             break;
         case 49:  // 按下 1
-            AeLogI("Environment = None\n");
+            LogInfo("Environment = None\n");
             ret = set_xmly_effect(ctx, "Environment", "None", 0);
             break;
         case 50:  // 按下 2
-            AeLogI("Environment = Valley\n");
+            LogInfo("Environment = Valley\n");
             ret = set_xmly_effect(ctx, "Environment", "Valley", 0);
             break;
         case 51:  // 按下 3
-            AeLogI("Environment = Church\n");
+            LogInfo("Environment = Church\n");
             ret = set_xmly_effect(ctx, "Environment", "Church", 0);
             break;
         case 52:  // 按下 4
-            AeLogI("Environment = Classroom\n");
+            LogInfo("Environment = Classroom\n");
             ret = set_xmly_effect(ctx, "Environment", "Classroom", 0);
             break;
         case 53:  // 按下 5
-            AeLogI("Environment = Live\n");
+            LogInfo("Environment = Live\n");
             ret = set_xmly_effect(ctx, "Environment", "Live", 0);
             break;
         case 113:  // 按下 Q
-            AeLogI("Morph = Original\n");
+            LogInfo("Morph = Original\n");
             ret = set_xmly_effect(ctx, "Morph", "Original", 0);
             break;
         case 119:  // 按下 W
-            AeLogI("Morph = Robot\n");
+            LogInfo("Morph = Robot\n");
             ret = set_xmly_effect(ctx, "Morph", "Robot", 0);
             break;
         case 101:  // 按下 E
-            AeLogI("Morph = Mimions\n");
+            LogInfo("Morph = Mimions\n");
             ret = set_xmly_effect(ctx, "Morph", "Mimions", 0);
             break;
         case 114:  // 按下 R
-            AeLogI("Morph = Bright\n");
+            LogInfo("Morph = Bright\n");
             ret = set_xmly_effect(ctx, "Morph", "Bright", 0);
             break;
         case 116:  // 按下 T
-            AeLogI("Morph = Man\n");
+            LogInfo("Morph = Man\n");
             ret = set_xmly_effect(ctx, "Morph", "Man", 0);
             break;
         case 121:  // 按下 Y
-            AeLogI("Morph = Women\n");
+            LogInfo("Morph = Women\n");
             ret = set_xmly_effect(ctx, "Morph", "Women", 0);
             break;
         case 97:  // 按下 A
-            AeLogI("Equalizer = None\n");
+            LogInfo("Equalizer = None\n");
             ret = set_xmly_effect(ctx, "Equalizer", "None", 0);
             break;
         case 115:  // 按下 S
-            AeLogI("Equalizer = CleanVoice\n");
+            LogInfo("Equalizer = CleanVoice\n");
             ret = set_xmly_effect(ctx, "Equalizer", "CleanVoice", 0);
             break;
         case 100:  // 按下 D
-            AeLogI("Equalizer = Bass\n");
+            LogInfo("Equalizer = Bass\n");
             ret = set_xmly_effect(ctx, "Equalizer", "Bass", 0);
             break;
         case 102:  // 按下 F
-            AeLogI("Equalizer = LowVoice\n");
+            LogInfo("Equalizer = LowVoice\n");
             ret = set_xmly_effect(ctx, "Equalizer", "LowVoice", 0);
             break;
         case 103:  // 按下 G
-            AeLogI("Equalizer = Penetrating\n");
+            LogInfo("Equalizer = Penetrating\n");
             ret = set_xmly_effect(ctx, "Equalizer", "Penetrating", 0);
             break;
         case 104:  // 按下 H
-            AeLogI("Equalizer = Magnetic\n");
+            LogInfo("Equalizer = Magnetic\n");
             ret = set_xmly_effect(ctx, "Equalizer", "Magnetic", 0);
             break;
         case 106:  // 按下 J
-            AeLogI("Equalizer = SoftPitch\n");
+            LogInfo("Equalizer = SoftPitch\n");
             ret = set_xmly_effect(ctx, "Equalizer", "SoftPitch", 0);
             break;
         case 107:  // 按下 K
-            AeLogI("Equalizer = OldRadio\n");
+            LogInfo("Equalizer = OldRadio\n");
             ret = set_xmly_effect(ctx, "Equalizer", "OldRadio", 0);
             break;
         default:
@@ -182,10 +182,11 @@ void *xmly_effects_thread(void *arg) {
     XmlyEffectContext *ctx = create_xmly_effect();
     ret = init_xmly_effect(ctx);
     if (ret < 0) {
-        AeLogE("test_xmly_audio_effects.c:%d %s init_xmly_effect error.\n",
-               __LINE__, __func__);
+        LogError("test_xmly_audio_effects.c:%d %s init_xmly_effect error.\n",
+                 __LINE__, __func__);
         goto end;
     }
+    ret = set_xmly_effect(ctx, "Equalizer", "OldRadio", 0);
 
     while (!abort_request) {
         // 处理消息
@@ -194,8 +195,8 @@ void *xmly_effects_thread(void *arg) {
         // 读取数据
         ret = fread(buffer, sizeof(int16_t), buffer_size, pcm_reader);
         if (ret <= 0) {
-            AeLogE("test_xmly_audio_effects.c:%d %s fread error(ret = %d).\n",
-                   __LINE__, __func__, ret);
+            LogError("test_xmly_audio_effects.c:%d %s fread error(ret = %d).\n",
+                     __LINE__, __func__, ret);
             fseek(pcm_reader, 0L, SEEK_SET);
             continue;
         }
@@ -237,11 +238,11 @@ static int scan_keyboard() {
 }
 
 int main(int argc, char **argv) {
-    AeSetLogLevel(kLogLevelAll);
-    AeSetLogMode(kLogModeScreen);
+    AeSetLogLevel(LOG_LEVEL_TRACE);
+    AeSetLogMode(LOG_MODE_SCREEN);
 
     if (argc < 2) {
-        AeLogW("Usage %s input_pcm_file output_pcm_file\n", argv[0]);
+        LogWarning("Usage %s input_pcm_file output_pcm_file\n", argv[0]);
         return 0;
     }
 
@@ -253,7 +254,7 @@ int main(int argc, char **argv) {
     int ret =
         pthread_create(&xmly_effects_tid, NULL, xmly_effects_thread, NULL);
     if (ret) {
-        AeLogE("Error:unable to create thread, %d\n", ret);
+        LogError("Error:unable to create thread, %d\n", ret);
         goto end;
     }
 

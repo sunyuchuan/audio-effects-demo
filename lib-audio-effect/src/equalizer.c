@@ -9,7 +9,7 @@
 #include "dsp_tools/iir_design/iir_design.h"
 #include "effect_struct.h"
 #include "error_def.h"
-#include "logger.h"
+#include "log.h"
 #include "tools/conversion.h"
 #include "tools/dict.h"
 #include "tools/fifo.h"
@@ -28,7 +28,7 @@ typedef struct {
     Band *effect_bands;
     float *flp_buffer;
     size_t flp_buffer_size;
-    short is_equalizer_on;
+    bool is_equalizer_on;
 } priv_t;
 
 static int equalizer_close(EffectContext *ctx) {
@@ -159,7 +159,7 @@ static void create_soft_pitch(priv_t *priv) {
 
 static int equalizer_init(EffectContext *ctx, int argc, char **argv) {
     for (int i = 0; i < argc; ++i) {
-        AeLogI("argv[%d] = %s\n", i, argv[i]);
+        LogInfo("argv[%d] = %s\n", i, argv[i]);
     }
     assert(NULL != ctx);
     priv_t *priv = (priv_t *)ctx->priv;
@@ -185,7 +185,7 @@ static int equalizer_init(EffectContext *ctx, int argc, char **argv) {
         return AEERROR_NOMEM;
     }
     priv->flp_buffer_size = MIN_BUFFER_SIZE;
-    priv->is_equalizer_on = 0;
+    priv->is_equalizer_on = false;
 
     // 创建基本的均衡器
     create_base_effect(priv);
@@ -194,17 +194,17 @@ static int equalizer_init(EffectContext *ctx, int argc, char **argv) {
 }
 
 static void equalizer_set_mode(priv_t *priv, const char *mode) {
-    AeLogI("equalizer.c:%d %s mode = %s.\n", __LINE__, __func__, mode);
+    LogInfo("%s mode = %s.\n", __func__, mode);
     sdl_mutex_lock(priv->sdl_mutex);
 
     if (priv->effect_bands) {
         av_freep(&priv->effect_bands);
         priv->nb_effect_bands = 0;
     }
-    priv->is_equalizer_on = 1;
+    priv->is_equalizer_on = true;
 
     if (0 == strcasecmp(mode, "None")) {
-        priv->is_equalizer_on = 0;
+        priv->is_equalizer_on = false;
     } else if (0 == strcasecmp(mode, "OldRadio")) {
         create_old_radio(priv);
     } else if (0 == strcasecmp(mode, "CleanVoice")) {
@@ -219,13 +219,15 @@ static void equalizer_set_mode(priv_t *priv, const char *mode) {
         create_magnetic_effect(priv);
     } else if (0 == strcasecmp(mode, "SoftPitch")) {
         create_soft_pitch(priv);
+    } else {
+        priv->is_equalizer_on = false;
     }
 
     sdl_mutex_unlock(priv->sdl_mutex);
 }
 
 static int equalizer_set(EffectContext *ctx, const char *key, int flags) {
-    AeLogI("equalizer.c:%d %s key = %s.\n", __LINE__, __func__, key);
+    LogInfo("%s key = %s.\n", __func__, key);
     AEDictionaryEntry *entry = ae_dict_get(ctx->options, key, NULL, flags);
     if (entry) {
         if (0 == strcasecmp(entry->key, "mode")) {
@@ -277,8 +279,8 @@ static int equalizer_receive(EffectContext *ctx, void *samples,
     // 读取原始数据
     int ret = fifo_read(priv->f, samples, nb_samples);
 
-    sdl_mutex_lock(priv->sdl_mutex);
     if (priv->is_equalizer_on) {
+        sdl_mutex_lock(priv->sdl_mutex);
         if ((size_t)ret > priv->flp_buffer_size) {
             priv->flp_buffer_size = ret;
             priv->flp_buffer = av_realloc(
@@ -296,8 +298,8 @@ static int equalizer_receive(EffectContext *ctx, void *samples,
 
         // 处理后的数据转换成short类型
         FloatToS16(priv->flp_buffer, samples, ret);
+        sdl_mutex_unlock(priv->sdl_mutex);
     }
-    sdl_mutex_unlock(priv->sdl_mutex);
     return ret;
 }
 

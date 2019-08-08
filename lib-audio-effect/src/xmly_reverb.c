@@ -4,7 +4,7 @@
 #include <string.h>
 #include "effect_struct.h"
 #include "error_def.h"
-#include "logger.h"
+#include "log.h"
 #include "math/spl_math.h"
 #include "tools/fifo.h"
 #include "tools/sdl_mutex.h"
@@ -38,11 +38,11 @@ typedef struct {
     short gain;
     // environment arguments
     short dry;
-    short is_reverb_on;
+    bool is_reverb_on;
 } priv_t;
 
 static int xmly_reverb_close(EffectContext *ctx) {
-    AeLogI("xmly_reverb.c:%d %s.\n", __LINE__, __func__);
+    LogInfo("%s.\n", __func__);
     assert(NULL != ctx);
 
     if (ctx->priv) {
@@ -76,13 +76,13 @@ static void init_self_parameter(priv_t *priv) {
     priv->gain = FIXED_GAIN;
     short tmp1 = 32767.0f * 0.4f;
     priv->dry = tmp1 * SCALE_DRY;
-    priv->is_reverb_on = 0;
+    priv->is_reverb_on = false;
 }
 
 static int xmly_reverb_init(EffectContext *ctx, int argc, char **argv) {
-    AeLogI("xmly_reverb.c:%d %s.\n", __LINE__, __func__);
+    LogInfo("%s.\n", __func__);
     for (int i = 0; i < argc; ++i) {
-        AeLogI("argv[%d] = %s\n", i, argv[i]);
+        LogInfo("argv[%d] = %s\n", i, argv[i]);
     }
     assert(NULL != ctx);
     priv_t *priv = (priv_t *)ctx->priv;
@@ -140,10 +140,9 @@ end:
 }
 
 static void reverb_set_mode(priv_t *priv, const char *mode) {
-    AeLogI("xmly_reverb.c:%d %s.\n", __LINE__, __func__);
-    priv->is_reverb_on = 1;
+    LogInfo("%s mode(%s).\n", __func__, mode);
+    priv->is_reverb_on = true;
     if (0 == strcasecmp(mode, "KTV")) {
-        AeLogI("xmly_reverb.c:%d %s KTV.\n", __LINE__, __func__);
         priv->comb_buf_len[0] = 316;
         priv->comb_buf_len[1] = 388;
         priv->comb_buf_len[2] = 477;
@@ -157,7 +156,6 @@ static void reverb_set_mode(priv_t *priv, const char *mode) {
         priv->allpass_buf_len[2] = 3000;
         priv->allpass_buf_len[3] = 3500;
     } else if (0 == strcasecmp(mode, "LIVE")) {
-        AeLogI("xmly_reverb.c:%d %s LIVE.\n", __LINE__, __func__);
         priv->comb_buf_len[0] = 916;
         priv->comb_buf_len[1] = 988;
         priv->comb_buf_len[2] = 1077;
@@ -171,7 +169,6 @@ static void reverb_set_mode(priv_t *priv, const char *mode) {
         priv->allpass_buf_len[2] = 3000;
         priv->allpass_buf_len[3] = 3500;
     } else if (0 == strcasecmp(mode, "SMALL_ROOM")) {
-        AeLogI("xmly_reverb.c:%d %s SMALL_ROOM.\n", __LINE__, __func__);
         priv->comb_buf_len[0] = 616;
         priv->comb_buf_len[1] = 688;
         priv->comb_buf_len[2] = 777;
@@ -185,8 +182,7 @@ static void reverb_set_mode(priv_t *priv, const char *mode) {
         priv->allpass_buf_len[2] = 3000;
         priv->allpass_buf_len[3] = 3500;
     } else {
-        AeLogI("xmly_reverb.c:%d %s default.\n", __LINE__, __func__);
-        priv->is_reverb_on = 0;
+        priv->is_reverb_on = false;
         priv->comb_buf_len[0] = 1000;
         priv->comb_buf_len[1] = 1050;
         priv->comb_buf_len[2] = 1100;
@@ -203,13 +199,13 @@ static void reverb_set_mode(priv_t *priv, const char *mode) {
 }
 
 static int xmly_reverb_set(EffectContext *ctx, const char *key, int flags) {
-    AeLogI("xmly_reverb.c:%d %s.\n", __LINE__, __func__);
+    LogInfo("%s.\n", __func__);
     assert(NULL != ctx);
 
     priv_t *priv = ctx->priv;
     AEDictionaryEntry *entry = ae_dict_get(ctx->options, key, NULL, flags);
     if (entry) {
-        AeLogI("key = %s val = %s\n", entry->key, entry->value);
+        LogInfo("key = %s val = %s\n", entry->key, entry->value);
         sdl_mutex_lock(priv->sdl_mutex);
         if (0 == strcasecmp(entry->key, "mode")) {
             reverb_set_mode(priv, entry->value);
@@ -219,7 +215,7 @@ static int xmly_reverb_set(EffectContext *ctx, const char *key, int flags) {
             short tmp = room_size * 32767;
             priv->comb_feedback =
                 (tmp * SCALE_ROOM + (int)(OFFSET_ROOM << 15)) >> 15;
-            AeLogI("comb_feedback = %d\n", priv->comb_feedback);
+            LogInfo("comb_feedback = %d\n", priv->comb_feedback);
         }
         sdl_mutex_unlock(priv->sdl_mutex);
     }
@@ -244,8 +240,8 @@ static int xmly_reverb_receive(EffectContext *ctx, void *samples,
     assert(NULL != priv->fifo_in);
     assert(NULL != priv->fifo_out);
 
-    sdl_mutex_lock(priv->sdl_mutex);
     if (priv->is_reverb_on) {
+        sdl_mutex_lock(priv->sdl_mutex);
         size_t nb_samples = fifo_read(priv->fifo_in, samples, max_nb_samples);
         int16_t *x = samples;
         for (size_t i = 0; i < nb_samples; ++i) {
@@ -408,6 +404,7 @@ static int xmly_reverb_receive(EffectContext *ctx, void *samples,
             x[i] = tmp32no3 >> 15;
         }
         fifo_write(priv->fifo_out, samples, nb_samples);
+        sdl_mutex_unlock(priv->sdl_mutex);
     } else {
         while (fifo_occupancy(priv->fifo_in) > 0) {
             size_t nb_samples =
@@ -415,8 +412,10 @@ static int xmly_reverb_receive(EffectContext *ctx, void *samples,
             fifo_write(priv->fifo_out, samples, nb_samples);
         }
     }
-    sdl_mutex_unlock(priv->sdl_mutex);
 
+    if (atomic_load(&ctx->return_max_nb_samples) &&
+        fifo_occupancy(priv->fifo_out) < max_nb_samples)
+        return 0;
     return fifo_read(priv->fifo_out, samples, max_nb_samples);
 }
 

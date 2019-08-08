@@ -1,8 +1,9 @@
 #include "morph_core.h"
 #include <assert.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include "error_def.h"
-#include "logger.h"
+#include "log.h"
 #include "math/junior_func.h"
 #include "pitch_tracker/pitch_macro.h"
 #include "pitch_tracker/pitch_tracker.h"
@@ -25,7 +26,7 @@ struct MorphCoreT {
     uint8_t** src_samples;
     uint8_t** dst_samples;
     int max_dst_nb_samples;
-    short is_morph_on;
+    bool is_morph_on;
 
     enum MorphType morph_type;
     float seg_pitch_transform;
@@ -523,7 +524,7 @@ MorphCore* morph_core_create() {
         ret = AEERROR_NOMEM;
         goto end;
     }
-    morph->is_morph_on = 0;
+    morph->is_morph_on = false;
     morph->max_dst_nb_samples = RESAMPLE_FRAME_LEN;
     ret = allocate_sample_buffer(&morph->src_samples, 1, RESAMPLE_FRAME_LEN,
                                  AV_SAMPLE_FMT_FLT);
@@ -595,11 +596,11 @@ void morph_core_set_type(MorphCore* morph, enum MorphType type) {
     sdl_mutex_lock(morph->sdl_mutex);
     // 更新变声类型
     morph->morph_type = type;
-    morph->is_morph_on = 1;
+    morph->is_morph_on = true;
     switch (morph->morph_type) {
         case ORIGINAL:
             morph->pitch_ratio = 1.0f;
-            morph->is_morph_on = 0;
+            morph->is_morph_on = false;
             break;
         case ROBOT:
             morph->pitch_ratio = 1.0f;
@@ -628,7 +629,8 @@ int morph_core_send(MorphCore* morph, const int16_t* samples,
 }
 
 int morph_core_receive(MorphCore* morph, int16_t* samples,
-                       const size_t max_nb_samples) {
+                       const size_t max_nb_samples,
+                       const atomic_bool* return_max_nb_samples) {
     assert(NULL != morph);
 
     sdl_mutex_lock(morph->sdl_mutex);
@@ -667,5 +669,8 @@ int morph_core_receive(MorphCore* morph, int16_t* samples,
     }
     sdl_mutex_unlock(morph->sdl_mutex);
 
+    if (atomic_load(return_max_nb_samples) &&
+        fifo_occupancy(morph->fifo_out) < max_nb_samples)
+        return 0;
     return fifo_read(morph->fifo_out, samples, max_nb_samples);
 }

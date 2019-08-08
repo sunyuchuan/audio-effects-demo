@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "effect_struct.h"
 #include "error_def.h"
-#include "logger.h"
+#include "log.h"
 #include "tools/fifo.h"
 
 typedef struct {
@@ -10,7 +10,7 @@ typedef struct {
 } priv_t;
 
 static int echo_close(EffectContext *ctx) {
-    AeLogI("echo.c:%d %s.\n", __LINE__, __func__);
+    LogInfo("%s.\n", __func__);
     assert(NULL != ctx);
 
     if (ctx->priv) {
@@ -21,9 +21,9 @@ static int echo_close(EffectContext *ctx) {
 }
 
 static int echo_init(EffectContext *ctx, int argc, char **argv) {
-    AeLogI("echo.c:%d %s.\n", __LINE__, __func__);
+    LogInfo("%s.\n",__func__);
     for (int i = 0; i < argc; ++i) {
-        AeLogI("argv[%d] = %s\n", i, argv[i]);
+        LogInfo("argv[%d] = %s\n", i, argv[i]);
     }
     assert(NULL != ctx);
     priv_t *priv = (priv_t *)ctx->priv;

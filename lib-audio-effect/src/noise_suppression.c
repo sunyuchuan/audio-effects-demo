@@ -8,7 +8,7 @@
 #include "dsp_tools/fft/fft8g.h"
 #include "effect_struct.h"
 #include "error_def.h"
-#include "logger.h"
+#include "log.h"
 #include "math/fast_math_ops.h"
 #include "noise_suppression/defines.h"
 #include "noise_suppression/noise_estimation.h"
@@ -44,12 +44,12 @@ typedef struct {
     short bandwidth_low2mid;
     short bandwidth_mid2high;
     short is_first_frame;
-    short is_noise_suppression_on;
+    bool is_noise_suppression_on;
     short is_enhance_mid_freq;
 } priv_t;
 
 static int noise_suppression_close(EffectContext *ctx) {
-    AeLogI("noise_suppression.c:%d %s.\n", __LINE__, __func__);
+    LogInfo("%s.\n", __func__);
     assert(NULL != ctx);
 
     if (ctx->priv) {
@@ -80,15 +80,15 @@ static void init_self_parameter(priv_t *priv) {
     priv->bandwidth_low2mid = 50;
     priv->bandwidth_mid2high = 250;
     priv->is_first_frame = 1;
-    priv->is_noise_suppression_on = 0;
+    priv->is_noise_suppression_on = false;
     priv->is_enhance_mid_freq = 0;
     priv->mid_freq_gain = 0.5f;
 }
 
 static int noise_suppression_init(EffectContext *ctx, int argc, char **argv) {
-    AeLogI("noise_suppression.c:%d %s.\n", __LINE__, __func__);
+    LogInfo("%s.\n", __func__);
     for (int i = 0; i < argc; ++i) {
-        AeLogI("argv[%d] = %s\n", i, argv[i]);
+        LogInfo("argv[%d] = %s\n", i, argv[i]);
     }
     assert(NULL != ctx);
     priv_t *priv = (priv_t *)ctx->priv;
@@ -126,13 +126,13 @@ end:
 
 static int noise_suppression_set(EffectContext *ctx, const char *key,
                                  int flags) {
-    AeLogI("noise_suppression.c:%d %s.\n", __LINE__, __func__);
+    LogInfo("%s.\n", __func__);
     assert(NULL != ctx);
 
     priv_t *priv = ctx->priv;
     AEDictionaryEntry *entry = ae_dict_get(ctx->options, key, NULL, flags);
     if (entry) {
-        AeLogI("key = %s val = %s\n", entry->key, entry->value);
+        LogInfo("key = %s val = %s\n", entry->key, entry->value);
 
         sdl_mutex_lock(priv->sdl_mutex);
         if (0 == strcasecmp(entry->key, "low2mid_in_Hz")) {
@@ -155,9 +155,9 @@ static int noise_suppression_set(EffectContext *ctx, const char *key,
             priv->is_enhance_mid_freq = atoi(entry->value);
         } else if (0 == strcasecmp(entry->key, "Switch")) {
             if (0 == strcasecmp(entry->value, "Off")) {
-                priv->is_noise_suppression_on = 0;
+                priv->is_noise_suppression_on = false;
             } else if (0 == strcasecmp(entry->value, "On")) {
-                priv->is_noise_suppression_on = 1;
+                priv->is_noise_suppression_on = true;
             }
         }
         sdl_mutex_unlock(priv->sdl_mutex);
@@ -167,7 +167,6 @@ static int noise_suppression_set(EffectContext *ctx, const char *key,
 
 static int noise_suppression_send(EffectContext *ctx, const void *samples,
                                   const size_t nb_samples) {
-    // AeLogI("noise_suppression.c:%d %s.\n", __LINE__, __func__);
     assert(NULL != ctx);
     priv_t *priv = (priv_t *)ctx->priv;
     assert(NULL != priv);
@@ -305,7 +304,6 @@ static void FrameOverlapAdd(priv_t *priv) {
 
 static int noise_suppression_receive(EffectContext *ctx, void *samples,
                                      const size_t max_nb_samples) {
-    // AeLogI("noise_suppression.c:%d %s.\n", __LINE__, __func__);
     assert(NULL != ctx);
     priv_t *priv = (priv_t *)ctx->priv;
     assert(NULL != priv);
@@ -349,6 +347,9 @@ static int noise_suppression_receive(EffectContext *ctx, void *samples,
     }
     sdl_mutex_unlock(priv->sdl_mutex);
 
+    if (atomic_load(&ctx->return_max_nb_samples) &&
+        fifo_occupancy(priv->fifo_out) < max_nb_samples)
+        return 0;
     // 读取原始数据
     return fifo_read(priv->fifo_out, samples, max_nb_samples);
 }

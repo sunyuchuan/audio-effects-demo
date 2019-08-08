@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "effect_struct.h"
 #include "error_def.h"
-#include "logger.h"
+#include "log.h"
 #include "resample/resample.h"
 #include "tables/recip_table.h"
 #include "tools/fifo.h"
@@ -36,7 +36,7 @@ typedef struct {
     uint8_t **src_samples;
     uint8_t **dst_samples;
     int max_dst_nb_samples;
-    short is_minions_on;
+    bool is_minions_on;
 } priv_t;
 
 static void sola_free(Sola **sola) {
@@ -150,7 +150,7 @@ static void sola_linear_cross_fade(Sola *sola) {
 }
 
 static int minions_close(EffectContext *ctx) {
-    AeLogI("minions.c:%d %s.\n", __LINE__, __func__);
+    LogInfo("%s.\n", __func__);
     assert(NULL != ctx);
 
     if (ctx->priv) {
@@ -174,9 +174,9 @@ static int minions_close(EffectContext *ctx) {
 }
 
 static int minions_init(EffectContext *ctx, int argc, char **argv) {
-    AeLogI("minions.c:%d %s.\n", __LINE__, __func__);
+    LogInfo("%s.\n", __func__);
     for (int i = 0; i < argc; ++i) {
-        AeLogI("argv[%d] = %s\n", i, argv[i]);
+        LogInfo("argv[%d] = %s\n", i, argv[i]);
     }
     assert(NULL != ctx);
     priv_t *priv = (priv_t *)ctx->priv;
@@ -208,7 +208,7 @@ static int minions_init(EffectContext *ctx, int argc, char **argv) {
         ret = AEERROR_NOMEM;
         goto end;
     }
-    priv->is_minions_on = 0;
+    priv->is_minions_on = false;
     priv->max_dst_nb_samples = RESAMPLE_FRAME_LEN;
     ret = sola_init(priv->sola, 400, 1.75f);
     ret = resampler_init(1, 1, SRC_SAMPLE_RATE, DST_SAMPLE_RATE,
@@ -224,20 +224,20 @@ end:
 }
 
 static int minions_set(EffectContext *ctx, const char *key, int flags) {
-    AeLogI("minions.c:%d %s.\n", __LINE__, __func__);
+    LogInfo("%s.\n", __func__);
     assert(NULL != ctx);
 
     priv_t *priv = ctx->priv;
     AEDictionaryEntry *entry = ae_dict_get(ctx->options, key, NULL, flags);
     if (entry) {
-        AeLogI("key = %s val = %s\n", entry->key, entry->value);
+        LogInfo("key = %s val = %s\n", entry->key, entry->value);
 
         sdl_mutex_lock(priv->sdl_mutex);
         if (0 == strcasecmp(entry->key, "Switch")) {
             if (0 == strcasecmp(entry->value, "On")) {
-                priv->is_minions_on = 1;
+                priv->is_minions_on = true;
             } else if (0 == strcasecmp(entry->value, "Off")) {
-                priv->is_minions_on = 0;
+                priv->is_minions_on = false;
             }
         }
         sdl_mutex_unlock(priv->sdl_mutex);
@@ -262,8 +262,8 @@ static int minions_receive(EffectContext *ctx, void *samples,
     assert(NULL != priv);
     assert(NULL != priv->fifo_in);
 
-    sdl_mutex_lock(priv->sdl_mutex);
     if (priv->is_minions_on) {
+        sdl_mutex_lock(priv->sdl_mutex);
         while (fifo_occupancy(priv->fifo_in) >=
                (size_t)priv->sola->analysis_window_offset) {
             fifo_read(priv->fifo_in, priv->sola->frame_update,
@@ -282,6 +282,7 @@ static int minions_receive(EffectContext *ctx, void *samples,
                                      &priv->max_dst_nb_samples, 1);
             if (ret > 0) fifo_write(priv->fifo_out, priv->dst_samples[0], ret);
         }
+        sdl_mutex_unlock(priv->sdl_mutex);
     } else {
         while (fifo_occupancy(priv->fifo_in) > 0) {
             size_t nb_samples =
@@ -294,8 +295,10 @@ static int minions_receive(EffectContext *ctx, void *samples,
             fifo_write(priv->fifo_out, samples, nb_samples);
         }
     }
-    sdl_mutex_unlock(priv->sdl_mutex);
 
+    if (atomic_load(&ctx->return_max_nb_samples) &&
+        fifo_occupancy(priv->fifo_out) < max_nb_samples)
+        return 0;
     return fifo_read(priv->fifo_out, samples, max_nb_samples);
 }
 

@@ -1,5 +1,7 @@
 #ifndef AUDIO_EFFECT_EFFECT_STRUCT_H_
 #define AUDIO_EFFECT_EFFECT_STRUCT_H_
+#include <stdatomic.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include "effects.h"
 #include "tools/dict.h"
@@ -22,6 +24,7 @@ struct EffectHandler_T {
 struct EffectContext_T {
     EffectHandler handler;
     AVDictionary *options;
+    atomic_bool return_max_nb_samples;
     void *priv;
 };
 

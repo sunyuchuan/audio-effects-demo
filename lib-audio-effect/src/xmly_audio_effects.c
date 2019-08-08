@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "effects.h"
-#include "logger.h"
+#include "log.h"
 #include "tools/util.h"
 
 enum EffectType {
@@ -45,8 +45,7 @@ int init_xmly_effect(XmlyEffectContext *ctx) {
         if (NULL != ctx->effects[i]) {
             int ret = init_effect(ctx->effects[i], 0, NULL);
             if (ret < 0) {
-                AeLogE("xmly_audio_effects.c:%d %s i = %d ret = %d.\n",
-                       __LINE__, __func__, i, ret);
+                LogError("%s i = %d ret = %d.\n", __func__, i, ret);
                 error = ret;
             }
         }
@@ -111,8 +110,7 @@ static int morph_set(XmlyEffectContext *ctx, const char *value, int flags) {
 
 int set_xmly_effect(XmlyEffectContext *ctx, const char *key, const char *value,
                     int flags) {
-    AeLogI("xmly_audio_effects.c:%d %s key = %s value = %s.\n", __LINE__,
-           __func__, key, value);
+    LogInfo("%s key = %s value = %s.\n", __func__, key, value);
     assert(NULL != ctx);
 
     if (0 == strcasecmp(key, "NoiseSuppression")) {

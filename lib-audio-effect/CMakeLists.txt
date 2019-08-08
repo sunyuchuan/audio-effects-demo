@@ -77,7 +77,7 @@ else()
 endif()
 
 
-add_library(effect
+add_library(audio_effect
 src/dsp_tools/fft/fft8g.c
 src/dsp_tools/iir_design/iir_design.c
 src/math/junior_func.c
@@ -90,7 +90,7 @@ src/tools/avstring.c
 src/tools/conversion.c
 src/tools/dict.c
 src/tools/fifo.c
-src/tools/logger.c
+src/tools/log.c
 src/tools/mem.c
 src/tools/sdl_mutex.c
 src/tools/util.c
@@ -115,50 +115,16 @@ set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install")
 
 install(DIRECTORY include DESTINATION .)
 
-install(TARGETS effect
+install(TARGETS audio_effect
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     )
 
-target_include_directories(effect
+target_include_directories(audio_effect
                            PRIVATE src
                            PUBLIC include)
 
 if(ENABLE_TESTING AND NOT ${CMAKE_SYSTEM_NAME} STREQUAL "Android" AND NOT IOS)
-    add_executable(test_all_effects tests/test_all_effects.c)
-    target_link_libraries(test_all_effects effect m  avutil swresample)
-
-    add_executable(test_echo tests/test_echo.c)
-    target_link_libraries(test_echo effect m pthread avutil swresample)
-
-    add_executable(test_effect tests/test_effect.c)
-    target_link_libraries(test_effect effect m pthread avutil swresample)
-
-    add_executable(test_equalizer tests/test_equalizer.c)
-    target_link_libraries(test_equalizer effect m pthread avutil swresample)
-
-    add_executable(test_fifo tests/test_fifo.c)
-    target_link_libraries(test_fifo effect m pthread avutil swresample)
-
-    add_executable(test_logger tests/test_logger.c)
-    target_link_libraries(test_logger effect m pthread avutil swresample)
-
-    add_executable(test_minions tests/test_minions.c)
-    target_link_libraries(test_minions effect m pthread avutil swresample)
-
-    add_executable(test_noise_suppression tests/test_noise_suppression.c)
-    target_link_libraries(test_noise_suppression effect m pthread avutil swresample)
-
-    add_executable(test_voice_morph tests/test_voice_morph.c)
-    target_link_libraries(test_voice_morph effect m  avutil swresample)
-
-    add_executable(test_xmly_audio_effects tests/test_xmly_audio_effects.c)
-    target_link_libraries(test_xmly_audio_effects effect m pthread avutil swresample)
-
-    add_executable(test_xmly_echo tests/test_xmly_echo.c)
-    target_link_libraries(test_xmly_echo effect m pthread avutil swresample)
-
-    add_executable(test_xmly_reverb tests/test_xmly_reverb.c)
-    target_link_libraries(test_xmly_reverb effect m pthread avutil swresample)
+  add_subdirectory(tests)
 endif()

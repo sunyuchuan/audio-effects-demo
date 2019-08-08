@@ -1,14 +1,14 @@
 #include <sys/time.h>
 #include "effects.h"
 #include "file_helper.h"
-#include "logger.h"
+#include "log.h"
 
 int main(int argc, char **argv) {
-    AeSetLogLevel(kLogLevelAll);
-    AeSetLogMode(kLogModeScreen);
+    AeSetLogLevel(LOG_LEVEL_TRACE);
+    AeSetLogMode(LOG_MODE_SCREEN);
 
     if (argc < 2) {
-        AeLogW("Usage %s input_pcm_file output_pcm_file\n", argv[0]);
+        LogWarning("Usage %s input_pcm_file output_pcm_file\n", argv[0]);
         return 0;
     }
 
@@ -66,6 +66,6 @@ end:
     }
     gettimeofday(&end, NULL);
     timer = 1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec;
-    AeLogI("time consuming %ld us\n", timer);
+    LogInfo("time consuming %ld us\n", timer);
     return 0;
 }

@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include "effects.h"
-#include "logger.h"
+#include "log.h"
 
 int main(int argc, char **argv) {
-    AeSetLogLevel(kLogLevelAll);
-    AeSetLogMode(kLogModeScreen);
+    AeSetLogLevel(LOG_LEVEL_TRACE);
+    AeSetLogMode(LOG_MODE_SCREEN);
 
     int ret = 0;
     short buffer[] = {0, 1, 2, 3};
@@ -22,13 +22,13 @@ int main(int argc, char **argv) {
     ret = send_samples(ctx, buffer, buffer_size);
     ret = receive_samples(ctx, buffer, buffer_size);
     for (int i = 0; i < buffer_size; ++i) {
-        AeLogI("%d\n", buffer[i]);
+        LogInfo("%d\n", buffer[i]);
     }
     if (ctx) {
         free_effect(ctx);
     }
     gettimeofday(&end, NULL);
     timer = 1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec;
-    AeLogI("time consuming %ld us\n", timer);
+    LogInfo("time consuming %ld us\n", timer);
     return 0;
 }

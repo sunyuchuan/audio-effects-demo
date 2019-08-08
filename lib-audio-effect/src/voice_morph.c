@@ -7,7 +7,7 @@
 #include <string.h>
 #include "effect_struct.h"
 #include "error_def.h"
-#include "logger.h"
+#include "log.h"
 #include "tools/util.h"
 #include "voice_morph/morph_core.h"
 
@@ -24,9 +24,9 @@ static int voice_morph_close(EffectContext *ctx) {
 }
 
 static int voice_morph_init(EffectContext *ctx, int argc, char **argv) {
-    AeLogI("voice_morph.c:%d %s.\n", __LINE__, __func__);
+    LogInfo("%s.\n", __func__);
     for (int i = 0; i < argc; ++i) {
-        AeLogI("argv[%d] = %s\n", i, argv[i]);
+        LogInfo("argv[%d] = %s\n", i, argv[i]);
     }
     assert(NULL != ctx);
     priv_t *priv = (priv_t *)ctx->priv;
@@ -48,30 +48,30 @@ end:
 
 static void voice_morph_set_mode(priv_t *priv, const char *mode) {
     if (0 == strcasecmp(mode, "original")) {
-        AeLogI("voice_morph.c:%d %s set original.\n", __LINE__, __func__);
+        LogInfo("%s set original.\n", __func__);
         morph_core_set_type(priv->morph, ORIGINAL);
     } else if (0 == strcasecmp(mode, "bright")) {
-        AeLogI("voice_morph.c:%d %s set bright.\n", __LINE__, __func__);
+        LogInfo("%s set bright.\n", __func__);
         morph_core_set_type(priv->morph, BRIGHT);
     } else if (0 == strcasecmp(mode, "robot")) {
-        AeLogI("voice_morph.c:%d %s set robot.\n", __LINE__, __func__);
+        LogInfo("%s set robot.\n", __func__);
         morph_core_set_type(priv->morph, ROBOT);
     } else if (0 == strcasecmp(mode, "man")) {
-        AeLogI("voice_morph.c:%d %s set man.\n", __LINE__, __func__);
+        LogInfo("%s set man.\n", __func__);
         morph_core_set_type(priv->morph, MAN);
     } else if (0 == strcasecmp(mode, "women")) {
-        AeLogI("voice_morph.c:%d %s set women.\n", __LINE__, __func__);
+        LogInfo("%s set women.\n", __func__);
         morph_core_set_type(priv->morph, WOMEN);
     }
 }
 
 static int voice_morph_set(EffectContext *ctx, const char *key, int flags) {
-    AeLogI("voice_morph.c:%d %s.\n", __LINE__, __func__);
+    LogInfo("%s.\n", __func__);
     assert(NULL != ctx);
 
     AEDictionaryEntry *entry = ae_dict_get(ctx->options, key, NULL, flags);
     if (entry) {
-        AeLogI("key = %s val = %s\n", entry->key, entry->value);
+        LogInfo("key = %s val = %s\n", entry->key, entry->value);
         if (0 == strcasecmp(entry->key, "mode")) {
             voice_morph_set_mode(ctx->priv, entry->value);
         }
@@ -96,7 +96,8 @@ static int voice_morph_receive(EffectContext *ctx, void *samples,
     assert(NULL != priv);
     assert(NULL != priv->morph);
 
-    return morph_core_receive(priv->morph, samples, max_nb_samples);
+    return morph_core_receive(priv->morph, samples, max_nb_samples,
+                              &ctx->return_max_nb_samples);
 }
 
 const EffectHandler *effect_voice_morph_fn(void) {

@@ -1,6 +1,7 @@
 #ifndef MORPH_CORE_H_
 #define MORPH_CORE_H_
 
+#include <stdatomic.h>
 #include <stddef.h>
 #include <stdint.h>
 typedef struct MorphCoreT MorphCore;
@@ -17,7 +18,8 @@ void morph_core_set_type(MorphCore* morph, enum MorphType type);
 int morph_core_send(MorphCore* morph, const int16_t* samples,
                     const size_t nb_samples);
 int morph_core_receive(MorphCore* morph, int16_t* samples,
-                       const size_t max_nb_samples);
+                       const size_t max_nb_samples,
+                       const atomic_bool* return_max_nb_samples);
 
 #ifdef __cplusplus
 }

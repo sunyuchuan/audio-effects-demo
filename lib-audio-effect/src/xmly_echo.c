@@ -4,7 +4,7 @@
 #include <string.h>
 #include "effect_struct.h"
 #include "error_def.h"
-#include "logger.h"
+#include "log.h"
 #include "math/spl_math.h"
 #include "tools/fifo.h"
 #include "tools/sdl_mutex.h"
@@ -23,7 +23,7 @@ typedef struct {
     fifo *fifo_in;
     fifo *fifo_out;
     SdlMutex *sdl_mutex;
-    short is_echo_on;
+    bool is_echo_on;
     short delay_frame_num;
     short weight[MAX_ECHO_LEVEL];
     int16_t delay_buf[MAX_ECHO_LEVEL][MAX_DELAY_BUFFER_LEN];
@@ -31,7 +31,7 @@ typedef struct {
 } priv_t;
 
 static int xmly_echo_close(EffectContext *ctx) {
-    AeLogI("xmly_echo.c:%d %s.\n", __LINE__, __func__);
+    LogInfo("%s.\n", __func__);
     assert(NULL != ctx);
 
     if (ctx->priv) {
@@ -45,7 +45,8 @@ static int xmly_echo_close(EffectContext *ctx) {
 
 static void init_self_parameter(priv_t *priv) {
     assert(NULL != priv);
-    priv->is_echo_on = 0;
+
+    priv->is_echo_on = false;
     priv->delay_frame_num = 5;
 
     int exp_w = 0x3fffffff;
@@ -62,9 +63,9 @@ static void init_self_parameter(priv_t *priv) {
 }
 
 static int xmly_echo_init(EffectContext *ctx, int argc, char **argv) {
-    AeLogI("xmly_echo.c:%d %s.\n", __LINE__, __func__);
+    LogInfo("%s.\n", __func__);
     for (int i = 0; i < argc; ++i) {
-        AeLogI("argv[%d] = %s\n", i, argv[i]);
+        LogInfo("argv[%d] = %s\n", i, argv[i]);
     }
     assert(NULL != ctx);
     priv_t *priv = (priv_t *)ctx->priv;
@@ -104,12 +105,12 @@ static void set_delay(priv_t *priv, int delay) {
 
 static void echo_set_mode(priv_t *priv, const char *mode) {
     if (0 == strcasecmp(mode, "None")) {
-        priv->is_echo_on = 0;
+        priv->is_echo_on = false;
         return;
     }
 
     int delay = 0;
-    priv->is_echo_on = 1;
+    priv->is_echo_on = true;
     if (0 == strcasecmp(mode, "Classroom")) {
         delay = 1;
     } else if (0 == strcasecmp(mode, "Church")) {
@@ -121,13 +122,13 @@ static void echo_set_mode(priv_t *priv, const char *mode) {
 }
 
 static int xmly_echo_set(EffectContext *ctx, const char *key, int flags) {
-    AeLogI("xmly_echo.c:%d %s.\n", __LINE__, __func__);
+    LogInfo("%s.\n", __func__);
     assert(NULL != ctx);
 
     priv_t *priv = ctx->priv;
     AEDictionaryEntry *entry = ae_dict_get(ctx->options, key, NULL, flags);
     if (entry) {
-        AeLogI("key = %s val = %s\n", entry->key, entry->value);
+        LogInfo("key = %s val = %s\n", entry->key, entry->value);
 
         sdl_mutex_lock(priv->sdl_mutex);
         if (0 == strcasecmp(entry->key, "mode")) {
@@ -193,6 +194,9 @@ static int xmly_echo_receive(EffectContext *ctx, void *samples,
     }
     sdl_mutex_unlock(priv->sdl_mutex);
 
+    if (atomic_load(&ctx->return_max_nb_samples) &&
+        fifo_occupancy(priv->fifo_out) < max_nb_samples)
+        return 0;
     return fifo_read(priv->fifo_out, samples, max_nb_samples);
 }
 

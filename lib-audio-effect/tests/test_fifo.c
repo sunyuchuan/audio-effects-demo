@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <sys/time.h>
-#include "logger.h"
+#include "log.h"
 #include "tools/fifo.h"
 
 int main(int argc, char **argv) {
-    AeSetLogLevel(kLogLevelAll);
-    AeSetLogMode(kLogModeScreen);
+    AeSetLogLevel(LOG_LEVEL_TRACE);
+    AeSetLogMode(LOG_MODE_SCREEN);
 
     int ret = 0;
     size_t buffer_size = 1024;
@@ -34,6 +34,6 @@ end:
     if (f) fifo_delete(&f);
     gettimeofday(&end, NULL);
     timer = 1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec;
-    AeLogI("time consuming %ld us\n", timer);
+    LogInfo("time consuming %ld us\n", timer);
     return 0;
 }

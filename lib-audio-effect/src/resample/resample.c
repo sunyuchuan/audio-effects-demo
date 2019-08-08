@@ -1,6 +1,6 @@
 #include "resample.h"
 #include <libavutil/channel_layout.h>
-#include "logger.h"
+#include "log.h"
 
 int resampler_init(const int src_channels, const int dst_channels,
                    const int src_sample_rate, const int dst_sample_rate,
@@ -18,14 +18,14 @@ int resampler_init(const int src_channels, const int dst_channels,
             dst_sample_rate, av_get_default_channel_layout(src_channels),
             src_sample_fmt, src_sample_rate, 0, NULL);
         if (NULL == *swr_ctx) {
-            AeLogE("Could not allocate resample context\n");
+            LogError("Could not allocate resample context\n");
             ret = AVERROR(ENOMEM);
         }
         // Open the resampler with the specified parameters.
         ret = swr_init(*swr_ctx);
         if (ret < 0) {
-            AeLogE("swr_init error(%s) error code = %d\n", av_err2str(ret),
-                   ret);
+            LogError("swr_init error(%s) error code = %d\n", av_err2str(ret),
+                     ret);
             goto end;
         }
     }
@@ -45,8 +45,8 @@ int allocate_sample_buffer(uint8_t*** buffer, const int nb_channels,
     int ret = av_samples_alloc_array_and_samples(buffer, NULL, nb_channels,
                                                  nb_samples, sample_fmt, 0);
     if (ret < 0) {
-        AeLogE("Could not allocate source samples(%s) error code = %d\n",
-               av_err2str(ret), ret);
+        LogError("Could not allocate source samples(%s) error code = %d\n",
+                 av_err2str(ret), ret);
         goto end;
     }
 end:
@@ -64,7 +64,7 @@ int resample_audio(SwrContext* swr_ctx, uint8_t** src_samples,
         ret = av_samples_alloc(*dst_samples, NULL, dst_channels,
                                *max_dst_nb_samples, AV_SAMPLE_FMT_S16, 1);
         if (ret < 0) {
-            AeLogE(
+            LogError(
                 "resample.c:%d %s av_samples_alloc error, error code = %d.\n",
                 __LINE__, __func__, ret);
             goto end;
@@ -75,8 +75,8 @@ int resample_audio(SwrContext* swr_ctx, uint8_t** src_samples,
         swr_convert(swr_ctx, *dst_samples, dst_nb_samples,
                     (const uint8_t**)(src_samples), src_nb_samples);
     if (ret < 0) {
-        AeLogE("resample.cpp:%d %s swr_convert, error code = %d.\n", __LINE__,
-               __func__, ret);
+        LogError("resample.cpp:%d %s swr_convert, error code = %d.\n", __LINE__,
+                 __func__, ret);
         goto end;
     }
 end:
