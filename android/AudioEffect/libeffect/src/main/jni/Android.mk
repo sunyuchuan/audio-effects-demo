@@ -10,10 +10,10 @@ LOCAL_MODULE := ijkffmpeg-$(TARGET_ARCH_ABI)
 LOCAL_SRC_FILES := $(MY_LIB_PATH)/libijkffmpeg-$(TARGET_ARCH_ABI).so
 include $(PREBUILT_SHARED_LIBRARY)
 
-# libeffect
+# libaudio_effect
 include $(CLEAR_VARS)
-LOCAL_MODULE := effect
-LOCAL_SRC_FILES := $(MY_LIB_PATH)/lib/libeffect.a
+LOCAL_MODULE := audio_effect
+LOCAL_SRC_FILES := $(MY_LIB_PATH)/lib/libaudio_effect.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 # audio-effect-jni
@@ -28,7 +28,7 @@ LOCAL_C_INCLUDES += $(MY_INC_PATH)
 LOCAL_SRC_FILES := JniAudioEffect.cpp \
 
 LOCAL_SHARED_LIBRARIES := ijkffmpeg-$(TARGET_ARCH_ABI)
-LOCAL_STATIC_LIBRARIES := effect
+LOCAL_STATIC_LIBRARIES := audio_effect
 
 LOCAL_MODULE := audio-effect-$(TARGET_ARCH_ABI)
 include $(BUILD_SHARED_LIBRARY)

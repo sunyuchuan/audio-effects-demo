@@ -1,4 +1,4 @@
-#include "effect-android-lib/include/logger.h"
+#include "effect-android-lib/include/log.h"
 #include "effect-android-lib/include/xmly_audio_effects.h"
 #include "utils.h"
 
@@ -16,8 +16,8 @@ Java_com_layne_libeffect_AudioEffect_register(JNIEnv *env, jclass type) {
         LOGE("失败，找不到mObject成员ID");
         return NO_FOUND_FIELD_OBJECT;
     }
-    AeSetLogLevel(kLogLevelAll);
-    AeSetLogMode(kLogModeAndroid);
+    AeSetLogLevel(LOG_LEVEL_TRACE);
+    AeSetLogMode(LOG_MODE_ANDROID);
     LOGD("注册AudioEffect成功.");
     return SUCCESS;
 }
