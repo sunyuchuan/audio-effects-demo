@@ -78,6 +78,11 @@ endif()
 
 
 add_library(audio_effect
+src/beautify/compressor.c
+src/beautify/equalizer.c
+src/beautify/flanger.c
+src/beautify/limiter.c
+src/beautify/multiband_compressor.c
 src/dsp_tools/fft/fft8g.c
 src/dsp_tools/iir_design/iir_design.c
 src/math/junior_func.c
@@ -95,9 +100,8 @@ src/tools/mem.c
 src/tools/sdl_mutex.c
 src/tools/util.c
 src/voice_morph/morph_core.c
+src/beautify.c
 src/effects.c
-src/echo.c
-src/equalizer.c
 src/minions.c
 src/noise_suppression.c
 src/voice_morph.c

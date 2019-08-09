@@ -123,9 +123,11 @@ int ae_dict_set_int(AVDictionary **pm, const char *key, int64_t value,
     return ae_dict_set(pm, key, valuestr, flags);
 }
 
-static int parse_key_value_pair(AVDictionary **pm, const char **buf,
-                                const char *key_val_sep, const char *pairs_sep,
-                                int flags) {
+__attribute__((unused)) static int parse_key_value_pair(AVDictionary **pm,
+                                                        const char **buf,
+                                                        const char *key_val_sep,
+                                                        const char *pairs_sep,
+                                                        int flags) {
     char *key = av_get_token(buf, key_val_sep);
     char *val = NULL;
     int ret;

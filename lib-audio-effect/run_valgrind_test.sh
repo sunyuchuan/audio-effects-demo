@@ -6,18 +6,8 @@ cd build
 cmake -DCMAKE_BUILD_TYPE=Debug -DENABLE_TESTING=1 ..
 make
 
-# valgrind --tool=callgrind ./test
-# valgrind --leak-check=full --log-file=noise_suppression.log ./example
-# kcachegrind callgrind.out* &
-
-echo -e "\033[1;43;30m\ntest_all_effects...\033[0m"
-valgrind --leak-check=full --log-file=valgrind_log/test_all_effects.log ./tests/test_all_effects ../data/pcm_mono_44kHz_0035.pcm test_all_effects.pcm
-echo -e "\033[1;43;30m\ntest_echo...\033[0m"
-valgrind --leak-check=full --log-file=valgrind_log/test_echo.log ./tests/test_echo ../data/pcm_mono_44kHz_0035.pcm test_echo.pcm
-echo -e "\033[1;43;30m\ntest_effect...\033[0m"
-valgrind --leak-check=full --log-file=valgrind_log/test_effect.log ./tests/test_effect
-echo -e "\033[1;43;30m\ntest_equalizer...\033[0m"
-valgrind --leak-check=full --log-file=valgrind_log/test_equalizer.log ./tests/test_equalizer ../data/pcm_mono_44kHz_0035.pcm test_equalizer.pcm
+echo -e "\033[1;43;30m\ntest_beautify...\033[0m"
+valgrind --leak-check=full --log-file=valgrind_log/test_beautify.log ./tests/test_beautify ../data/pcm_mono_44kHz_0035.pcm test_beautify.pcm
 echo -e "\033[1;43;30m\ntest_fifo...\033[0m"
 valgrind --leak-check=full --log-file=valgrind_log/test_fifo.log ./tests/test_fifo
 echo -e "\033[1;43;30m\ntest_logger...\033[0m"
@@ -35,13 +25,7 @@ valgrind --leak-check=full --log-file=valgrind_log/test_xmly_echo.log ./tests/te
 echo -e "\033[1;43;30m\ntest_xmly_reverb...\033[0m"
 valgrind --leak-check=full --log-file=valgrind_log/test_xmly_reverb.log ./tests/test_xmly_reverb ../data/pcm_mono_44kHz_0035.pcm test_xmly_reverb.pcm
 
-cat valgrind_log/test_all_effects.log
-echo -e "\n"
-cat valgrind_log/test_echo.log
-echo -e "\n"
-cat valgrind_log/test_effect.log
-echo -e "\n"
-cat valgrind_log/test_equalizer.log
+cat valgrind_log/test_beautify.log
 echo -e "\n"
 cat valgrind_log/test_fifo.log
 echo -e "\n"

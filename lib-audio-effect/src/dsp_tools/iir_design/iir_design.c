@@ -381,3 +381,29 @@ int iir_2nd_coeffs_butterworth_bandstop(Band *self, size_t sample_rate,
     return iir_2nd_coeffs_bilinear_bandstop(self, sample_rate, freq, q, 0, 1, 1,
                                             1);
 }
+
+void band_process(Band *self, float *buffer, size_t buffer_size) {
+    float b0 = self->coeffs[0];
+    float b1 = self->coeffs[1];
+    float b2 = self->coeffs[2];
+    float a1 = self->coeffs[3];
+    float a2 = self->coeffs[4];
+    float s1 = self->states[0];
+    float s2 = self->states[1];
+    float s3 = self->states[2];
+    float s4 = self->states[3];
+
+    for (size_t i = 0; i < buffer_size; ++i) {
+        float y = b0 * buffer[i] + b1 * s1 + b2 * s2 - a1 * s3 - a2 * s4;
+        s2 = s1;
+        s1 = buffer[i];
+        s4 = s3;
+        s3 = y;
+        buffer[i] = y;
+    }
+
+    self->states[0] = s1;
+    self->states[1] = s2;
+    self->states[2] = s3;
+    self->states[3] = s4;
+}

@@ -43,7 +43,6 @@
 static LogMode self_log_mode = LOG_MODE_NONE;
 static LogLevel self_log_level = LOG_LEVEL_INFO;
 static FILE *self_log_file = NULL;
-static int log_buffer_size = 400;
 static char self_log_buffer[MAX_BUFFER_SIZE];
 static pthread_mutex_t self_log_lock = PTHREAD_MUTEX_INITIALIZER;
 

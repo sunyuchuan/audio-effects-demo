@@ -1,14 +1,5 @@
-add_executable(test_all_effects test_all_effects.c)
-target_link_libraries(test_all_effects audio_effect m  avutil swresample)
-
-add_executable(test_echo test_echo.c)
-target_link_libraries(test_echo audio_effect m pthread avutil swresample)
-
-add_executable(test_effect test_effect.c)
-target_link_libraries(test_effect audio_effect m pthread avutil swresample)
-
-add_executable(test_equalizer test_equalizer.c)
-target_link_libraries(test_equalizer audio_effect m pthread avutil swresample)
+add_executable(test_beautify test_beautify.c)
+target_link_libraries(test_beautify audio_effect m pthread avutil swresample)
 
 add_executable(test_fifo test_fifo.c)
 target_link_libraries(test_fifo audio_effect m pthread avutil swresample)

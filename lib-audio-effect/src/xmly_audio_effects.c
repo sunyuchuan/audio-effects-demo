@@ -8,7 +8,7 @@
 
 enum EffectType {
     NoiseSuppression = 0,
-    Equalizer,
+    Beautify,
     XmlyEcho,
     XmlyReverb,
     Minions,
@@ -30,7 +30,7 @@ XmlyEffectContext *create_xmly_effect() {
     memset(self->effects, 0, self->nb_effects * sizeof(XmlyEffectContext *));
     self->effects[NoiseSuppression] =
         create_effect(find_effect("noise_suppression"));
-    self->effects[Equalizer] = create_effect(find_effect("equalizer"));
+    self->effects[Beautify] = create_effect(find_effect("beautify"));
     self->effects[XmlyEcho] = create_effect(find_effect("xmly_echo"));
     self->effects[XmlyReverb] = create_effect(find_effect("xmly_reverb"));
     self->effects[Minions] = create_effect(find_effect("minions"));
@@ -53,55 +53,47 @@ int init_xmly_effect(XmlyEffectContext *ctx) {
     return error;
 }
 
-static int environment_set(XmlyEffectContext *ctx, const char *value,
-                           int flags) {
-    if (0 == strcasecmp(value, "None")) {
-        // 无环境音
+static int special_set(XmlyEffectContext *ctx, const char *value, int flags) {
+    if (0 == strcasecmp(value, "Original")) {
+        // 无变声
         set_effect(ctx->effects[XmlyEcho], "mode", "None", flags);
         set_effect(ctx->effects[XmlyReverb], "mode", "None", flags);
-    } else if (0 == strcasecmp(value, "Valley")) {
-        // 山谷
-        set_effect(ctx->effects[XmlyReverb], "mode", "None", flags);
-        set_effect(ctx->effects[XmlyEcho], "mode", "Valley", flags);
+        set_effect(ctx->effects[Minions], "Switch", "Off", flags);
+        set_effect(ctx->effects[VoiceMorph], "mode", "Original", flags);
     } else if (0 == strcasecmp(value, "Church")) {
         // 教堂
-        set_effect(ctx->effects[XmlyReverb], "mode", "None", flags);
         set_effect(ctx->effects[XmlyEcho], "mode", "Church", flags);
-    } else if (0 == strcasecmp(value, "Classroom")) {
-        // 教室
         set_effect(ctx->effects[XmlyReverb], "mode", "None", flags);
-        set_effect(ctx->effects[XmlyEcho], "mode", "Classroom", flags);
+        set_effect(ctx->effects[Minions], "Switch", "Off", flags);
+        set_effect(ctx->effects[VoiceMorph], "mode", "Original", flags);
     } else if (0 == strcasecmp(value, "Live")) {
         // 现场演出
         set_effect(ctx->effects[XmlyEcho], "mode", "None", flags);
         set_effect(ctx->effects[XmlyReverb], "mode", "Live", flags);
-    }
-    return 0;
-}
-
-static int morph_set(XmlyEffectContext *ctx, const char *value, int flags) {
-    if (0 == strcasecmp(value, "Original")) {
-        // 无变声
         set_effect(ctx->effects[Minions], "Switch", "Off", flags);
         set_effect(ctx->effects[VoiceMorph], "mode", "Original", flags);
-    } else if (0 == strcasecmp(value, "Robot")) {
+    }  else if (0 == strcasecmp(value, "Robot")) {
         // 机器人
+        set_effect(ctx->effects[XmlyEcho], "mode", "None", flags);
+        set_effect(ctx->effects[XmlyReverb], "mode", "None", flags);
         set_effect(ctx->effects[Minions], "Switch", "Off", flags);
         set_effect(ctx->effects[VoiceMorph], "mode", "Robot", flags);
     } else if (0 == strcasecmp(value, "Mimions")) {
         // 小黄人
+        set_effect(ctx->effects[XmlyEcho], "mode", "None", flags);
+        set_effect(ctx->effects[XmlyReverb], "mode", "None", flags);
         set_effect(ctx->effects[Minions], "Switch", "On", flags);
         set_effect(ctx->effects[VoiceMorph], "mode", "original", flags);
-    } else if (0 == strcasecmp(value, "Bright")) {
-        // 明亮
-        set_effect(ctx->effects[Minions], "Switch", "Off", flags);
-        set_effect(ctx->effects[VoiceMorph], "mode", "Bright", flags);
     } else if (0 == strcasecmp(value, "Man")) {
         // 男声
+        set_effect(ctx->effects[XmlyEcho], "mode", "None", flags);
+        set_effect(ctx->effects[XmlyReverb], "mode", "None", flags);
         set_effect(ctx->effects[Minions], "Switch", "Off", flags);
         set_effect(ctx->effects[VoiceMorph], "mode", "Man", flags);
     } else if (0 == strcasecmp(value, "Women")) {
         // 女声
+        set_effect(ctx->effects[XmlyEcho], "mode", "None", flags);
+        set_effect(ctx->effects[XmlyReverb], "mode", "None", flags);
         set_effect(ctx->effects[Minions], "Switch", "Off", flags);
         set_effect(ctx->effects[VoiceMorph], "mode", "Women", flags);
     }
@@ -115,12 +107,10 @@ int set_xmly_effect(XmlyEffectContext *ctx, const char *key, const char *value,
 
     if (0 == strcasecmp(key, "NoiseSuppression")) {
         return set_effect(ctx->effects[NoiseSuppression], key, value, flags);
-    } else if (0 == strcasecmp(key, "Environment")) {
-        return environment_set(ctx, value, flags);
-    } else if (0 == strcasecmp(key, "Morph")) {
-        return morph_set(ctx, value, flags);
-    } else if (0 == strcasecmp(key, "Equalizer")) {
-        return set_effect(ctx->effects[Equalizer], "mode", value, flags);
+    } else if (0 == strcasecmp(key, "Beautify")) {
+        return set_effect(ctx->effects[Beautify], "mode", value, flags);
+    } else if (0 == strcasecmp(key, "Special")) {
+        return special_set(ctx, value, flags);
     }
     return 0;
 }

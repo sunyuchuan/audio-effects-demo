@@ -40,5 +40,6 @@ int iir_2nd_coeffs_butterworth_bandpass(Band *self, size_t sample_rate,
                                         float freq, float q);
 int iir_2nd_coeffs_butterworth_bandstop(Band *self, size_t sample_rate,
                                         float freq, float q);
+void band_process(Band *self, float *buffer, size_t buffer_size);
 
 #endif  // AUDIO_EFFECT_IIR_DESIGN_H_

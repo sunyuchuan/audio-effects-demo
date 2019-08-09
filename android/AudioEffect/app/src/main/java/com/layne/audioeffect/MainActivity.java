@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
 
         getSystemPermission();
         mEffect = new AudioEffect();
+        mEffect.set_xmly_effect("return_max_nb_samples", "True", 0);
 
         mBtnRecord = findViewById(R.id.btn_record);
         mBtnRecord.setOnClickListener(this);
@@ -57,7 +58,6 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
         mBtnNsSwitch.setOnClickListener(this);
 
         ((RadioGroup) findViewById(R.id.voice_group)).setOnCheckedChangeListener(this);
-        ((RadioGroup) findViewById(R.id.echo_group)).setOnCheckedChangeListener(this);
         ((RadioGroup) findViewById(R.id.eq_group)).setOnCheckedChangeListener(this);
 
         mPlayer = new AudioPlayer();
@@ -235,43 +235,33 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
     @Override
     public void onCheckedChanged(RadioGroup group, int checkedId) {
         if (checkedId == R.id.rb_voice_original) {
-            mEffect.set_xmly_effect("Morph", "Original", 0);
-        } else if (checkedId == R.id.rb_voice_robot) {
-            mEffect.set_xmly_effect("Morph", "Robot", 0);
-        } else if (checkedId == R.id.rb_voice_minions) {
-            mEffect.set_xmly_effect("Morph", "Mimions", 0);
-        } else if (checkedId == R.id.rb_voice_bright) {
-            mEffect.set_xmly_effect("Morph", "Bright", 0);
-        } else if (checkedId == R.id.rb_voice_man) {
-            mEffect.set_xmly_effect("Morph", "Man", 0);
-        } else if (checkedId == R.id.rb_voice_women) {
-            mEffect.set_xmly_effect("Morph", "Women", 0);
-        } else if (checkedId == R.id.rb_echo_none) {
-            mEffect.set_xmly_effect("Environment", "None", 0);
-        } else if (checkedId == R.id.rb_echo_volley) {
-            mEffect.set_xmly_effect("Environment", "Valley", 0);
+            mEffect.set_xmly_effect("Special", "Original", 0);
         } else if (checkedId == R.id.rb_echo_church) {
-            mEffect.set_xmly_effect("Environment", "Church", 0);
-        } else if (checkedId == R.id.rb_echo_classroom) {
-            mEffect.set_xmly_effect("Environment", "Classroom", 0);
+            mEffect.set_xmly_effect("Special", "Church", 0);
         } else if (checkedId == R.id.rb_echo_live) {
-            mEffect.set_xmly_effect("Environment", "Live", 0);
+            mEffect.set_xmly_effect("Special", "Live", 0);
+        } else if (checkedId == R.id.rb_voice_robot) {
+            mEffect.set_xmly_effect("Special", "Robot", 0);
+        } else if (checkedId == R.id.rb_voice_minions) {
+            mEffect.set_xmly_effect("Special", "Mimions", 0);
+        } else if (checkedId == R.id.rb_voice_man) {
+            mEffect.set_xmly_effect("Special", "Man", 0);
+        } else if (checkedId == R.id.rb_voice_women) {
+            mEffect.set_xmly_effect("Special", "Women", 0);
         } else if (checkedId == R.id.rb_eq_none) {
-            mEffect.set_xmly_effect("Equalizer", "None", 0);
+            mEffect.set_xmly_effect("Beautify", "None", 0);
         } else if (checkedId == R.id.rb_eq_clean_voice) {
-            mEffect.set_xmly_effect("Equalizer", "CleanVoice", 0);
+            mEffect.set_xmly_effect("Beautify", "CleanVoice", 0);
         } else if (checkedId == R.id.rb_eq_bass) {
-            mEffect.set_xmly_effect("Equalizer", "Bass", 0);
+            mEffect.set_xmly_effect("Beautify", "Bass", 0);
         } else if (checkedId == R.id.rb_eq_low_voice) {
-            mEffect.set_xmly_effect("Equalizer", "LowVoice", 0);
+            mEffect.set_xmly_effect("Beautify", "LowVoice", 0);
         } else if (checkedId == R.id.rb_eq_penetrating) {
-            mEffect.set_xmly_effect("Equalizer", "Penetrating", 0);
+            mEffect.set_xmly_effect("Beautify", "Penetrating", 0);
         } else if (checkedId == R.id.rb_eq_magnetic) {
-            mEffect.set_xmly_effect("Equalizer", "Magnetic", 0);
+            mEffect.set_xmly_effect("Beautify", "Magnetic", 0);
         } else if (checkedId == R.id.rb_eq_soft_pitch) {
-            mEffect.set_xmly_effect("Equalizer", "SoftPitch", 0);
-        } else if (checkedId == R.id.rb_eq_old_radio) {
-            mEffect.set_xmly_effect("Equalizer", "OldRadio", 0);
+            mEffect.set_xmly_effect("Beautify", "SoftPitch", 0);
         }
     }
 

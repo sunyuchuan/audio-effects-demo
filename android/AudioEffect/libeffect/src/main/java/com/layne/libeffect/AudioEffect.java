@@ -1,9 +1,20 @@
 package com.layne.libeffect;
 
+import android.os.Build;
+import android.util.Log;
+
+import static android.content.ContentValues.TAG;
+
 public class AudioEffect {
     static {
-        System.loadLibrary("ijkffmpeg-armeabi-v7a");
-        System.loadLibrary("audio-effect-armeabi-v7a");
+        String ABI = Build.CPU_ABI;
+        Log.i(TAG, "ABI " + ABI);
+
+        System.loadLibrary("ijkffmpeg" + "-" + ABI);
+        System.loadLibrary("audio-effect" + "-" + ABI);
+
+//        System.loadLibrary("ijkffmpeg-armeabi-v7a");
+//        System.loadLibrary("audio-effect-armeabi-v7a");
         register();
     }
 

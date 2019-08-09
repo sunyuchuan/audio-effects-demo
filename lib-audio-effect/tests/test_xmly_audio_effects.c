@@ -39,6 +39,7 @@ static int message_get() {
 }
 
 static int open_input_output(int argc, char **argv) {
+    if (argc < 3) return -1;
     int ret = 0;
     // 打开输入文件
     ret = OpenFile(&pcm_reader, argv[1], 0);
@@ -64,16 +65,14 @@ static void close_input_output() {
 static void show_menu() {
     printf("\n\n===================================================\n");
     printf("[.打开降噪          ].关闭降噪\n");
-    printf("1.无环境声          2.山谷\n");
-    printf("3.礼堂              4.教室\n");
-    printf("5.现场演出\n");
-    printf("Q.原声              W.机器人\n");
-    printf("E.小黄人            R.明亮\n");
-    printf("T.男声              Y.女声\n");
-    printf("A.原声              S.清澈\n");
-    printf("D.低音              F.低沉\n");
-    printf("G.穿透              H.磁性\n");
-    printf("J.柔和              K.收音机\n");
+    printf("Q.原声              W.礼堂\n");
+    printf("E.演唱会            R.机器人\n");
+    printf("T.小黄人            Y.男声\n");
+    printf("U.女声\n");
+    printf("A.原声              S.清晰\n");
+    printf("D.沉稳              F.低音\n");
+    printf("G.明亮              H.磁性\n");
+    printf("J.柔和\n");
     printf("Esc.退出\n");
     printf("======================================================\n\n");
 }
@@ -97,76 +96,68 @@ static int process_message(XmlyEffectContext *ctx) {
             ret = set_xmly_effect(ctx, "Environment", "None", 0);
             break;
         case 50:  // 按下 2
-            LogInfo("Environment = Valley\n");
-            ret = set_xmly_effect(ctx, "Environment", "Valley", 0);
-            break;
-        case 51:  // 按下 3
             LogInfo("Environment = Church\n");
             ret = set_xmly_effect(ctx, "Environment", "Church", 0);
             break;
-        case 52:  // 按下 4
-            LogInfo("Environment = Classroom\n");
-            ret = set_xmly_effect(ctx, "Environment", "Classroom", 0);
-            break;
-        case 53:  // 按下 5
+        case 51:  // 按下 3
             LogInfo("Environment = Live\n");
             ret = set_xmly_effect(ctx, "Environment", "Live", 0);
             break;
         case 113:  // 按下 Q
-            LogInfo("Morph = Original\n");
-            ret = set_xmly_effect(ctx, "Morph", "Original", 0);
+            LogInfo("Special = Original\n");
+            ret = set_xmly_effect(ctx, "Special", "Original", 0);
             break;
         case 119:  // 按下 W
-            LogInfo("Morph = Robot\n");
-            ret = set_xmly_effect(ctx, "Morph", "Robot", 0);
+            LogInfo("Special = Church\n");
+            ret = set_xmly_effect(ctx, "Special", "Church", 0);
             break;
         case 101:  // 按下 E
-            LogInfo("Morph = Mimions\n");
-            ret = set_xmly_effect(ctx, "Morph", "Mimions", 0);
+            LogInfo("Special = Live\n");
+            ret = set_xmly_effect(ctx, "Special", "Live", 0);
             break;
         case 114:  // 按下 R
-            LogInfo("Morph = Bright\n");
-            ret = set_xmly_effect(ctx, "Morph", "Bright", 0);
+            LogInfo("Special = Robot\n");
+            ret = set_xmly_effect(ctx, "Special", "Robot", 0);
             break;
         case 116:  // 按下 T
-            LogInfo("Morph = Man\n");
-            ret = set_xmly_effect(ctx, "Morph", "Man", 0);
+            LogInfo("Special = Mimions\n");
+            ret = set_xmly_effect(ctx, "Special", "Mimions", 0);
             break;
         case 121:  // 按下 Y
-            LogInfo("Morph = Women\n");
-            ret = set_xmly_effect(ctx, "Morph", "Women", 0);
+            LogInfo("Special = Man\n");
+            ret = set_xmly_effect(ctx, "Special", "Man", 0);
+            break;
+        case 117:  // 按下 U
+            LogInfo("Special = Women\n");
+            ret = set_xmly_effect(ctx, "Special", "Women", 0);
             break;
         case 97:  // 按下 A
-            LogInfo("Equalizer = None\n");
-            ret = set_xmly_effect(ctx, "Equalizer", "None", 0);
+            LogInfo("Beautify = None\n");
+            ret = set_xmly_effect(ctx, "Beautify", "None", 0);
             break;
         case 115:  // 按下 S
-            LogInfo("Equalizer = CleanVoice\n");
-            ret = set_xmly_effect(ctx, "Equalizer", "CleanVoice", 0);
+            LogInfo("Beautify = CleanVoice\n");
+            ret = set_xmly_effect(ctx, "Beautify", "CleanVoice", 0);
             break;
         case 100:  // 按下 D
-            LogInfo("Equalizer = Bass\n");
-            ret = set_xmly_effect(ctx, "Equalizer", "Bass", 0);
+            LogInfo("Beautify = Bass\n");
+            ret = set_xmly_effect(ctx, "Beautify", "Bass", 0);
             break;
         case 102:  // 按下 F
-            LogInfo("Equalizer = LowVoice\n");
-            ret = set_xmly_effect(ctx, "Equalizer", "LowVoice", 0);
+            LogInfo("Beautify = LowVoice\n");
+            ret = set_xmly_effect(ctx, "Beautify", "LowVoice", 0);
             break;
         case 103:  // 按下 G
-            LogInfo("Equalizer = Penetrating\n");
-            ret = set_xmly_effect(ctx, "Equalizer", "Penetrating", 0);
+            LogInfo("Beautify = Penetrating\n");
+            ret = set_xmly_effect(ctx, "Beautify", "Penetrating", 0);
             break;
         case 104:  // 按下 H
-            LogInfo("Equalizer = Magnetic\n");
-            ret = set_xmly_effect(ctx, "Equalizer", "Magnetic", 0);
+            LogInfo("Beautify = Magnetic\n");
+            ret = set_xmly_effect(ctx, "Beautify", "Magnetic", 0);
             break;
         case 106:  // 按下 J
-            LogInfo("Equalizer = SoftPitch\n");
-            ret = set_xmly_effect(ctx, "Equalizer", "SoftPitch", 0);
-            break;
-        case 107:  // 按下 K
-            LogInfo("Equalizer = OldRadio\n");
-            ret = set_xmly_effect(ctx, "Equalizer", "OldRadio", 0);
+            LogInfo("Beautify = SoftPitch\n");
+            ret = set_xmly_effect(ctx, "Beautify", "SoftPitch", 0);
             break;
         default:
             break;
@@ -174,7 +165,7 @@ static int process_message(XmlyEffectContext *ctx) {
     return ret;
 }
 
-void *xmly_effects_thread(void *arg) {
+void *xmly_effects_thread(__attribute__((unused)) void *arg) {
     int ret = 0;
     int buffer_size = 1024;
     int16_t buffer[buffer_size];
@@ -182,11 +173,11 @@ void *xmly_effects_thread(void *arg) {
     XmlyEffectContext *ctx = create_xmly_effect();
     ret = init_xmly_effect(ctx);
     if (ret < 0) {
-        LogError("test_xmly_audio_effects.c:%d %s init_xmly_effect error.\n",
-                 __LINE__, __func__);
+        LogError("%s init_xmly_effect error.\n", __func__);
         goto end;
     }
-    ret = set_xmly_effect(ctx, "Equalizer", "OldRadio", 0);
+
+    set_xmly_effect(ctx, "return_max_nb_samples", "True", 0);
 
     while (!abort_request) {
         // 处理消息
@@ -195,8 +186,7 @@ void *xmly_effects_thread(void *arg) {
         // 读取数据
         ret = fread(buffer, sizeof(int16_t), buffer_size, pcm_reader);
         if (ret <= 0) {
-            LogError("test_xmly_audio_effects.c:%d %s fread error(ret = %d).\n",
-                     __LINE__, __func__, ret);
+            LogError("%s fread error(ret = %d).\n", __func__, ret);
             fseek(pcm_reader, 0L, SEEK_SET);
             continue;
         }

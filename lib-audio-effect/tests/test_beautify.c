@@ -30,33 +30,36 @@ int main(int argc, char **argv) {
     ret = OpenFile(&pcm_writer, argv[2], 1);
     if (ret < 0) goto end;
 
-    ctx = create_effect(find_effect("equalizer"));
+    ctx = create_effect(find_effect("beautify"));
     ret = init_effect(ctx, 0, NULL);
     if (ret < 0) goto end;
 
-    // 关闭均衡器
-    set_effect(ctx, "mode", "None", 0);
-    // 设置音效模式
-    set_effect(ctx, "mode", "OldRadio", 0);
-    // set_effect(ctx, "mode", "CleanVoice", 0);
-    // set_effect(ctx, "mode", "Bass", 0);
-    // set_effect(ctx, "mode", "LowVoice", 0);
-    // set_effect(ctx, "mode", "Penetrating", 0);
-    // set_effect(ctx, "mode", "Magnetic", 0);
-    // set_effect(ctx, "mode", "SoftPitch", 0);
+    int count = 0;
 
-    // 增益均衡处理
     while (buffer_size ==
            fread(buffer, sizeof(short), buffer_size, pcm_reader)) {
         // 传入数据
         ret = send_samples(ctx, buffer, buffer_size);
         if (ret < 0) break;
-
         // 取出数据
         ret = receive_samples(ctx, buffer, buffer_size);
         while (ret > 0) {
             fwrite(buffer, sizeof(short), ret, pcm_writer);
             ret = receive_samples(ctx, buffer, buffer_size);
+        }
+        ++count;
+        if (count == 100) {
+            set_effect(ctx, "mode", "CleanVoice", 0);
+        } else if (count == 200) {
+            set_effect(ctx, "mode", "Bass", 0);
+        } else if (count == 300) {
+            set_effect(ctx, "mode", "LowVoice", 0);
+        } else if (count == 400) {
+            set_effect(ctx, "mode", "Penetrating", 0);
+        } else if (count == 500) {
+            set_effect(ctx, "mode", "Magnetic", 0);
+        } else if (count == 600) {
+            set_effect(ctx, "mode", "SoftPitch", 0);
         }
     }
 

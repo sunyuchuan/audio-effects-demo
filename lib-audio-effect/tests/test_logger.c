@@ -6,7 +6,8 @@
 #include "log.h"
 
 static const int times = 100;
-void *DebugLogThread(void *arg) {
+
+static void *DebugLogThread(__attribute__((unused)) void *arg) {
     for (int i = 0; i < times; ++i) {
         LogDebug("Debug\n");
         usleep(1000);
@@ -14,7 +15,7 @@ void *DebugLogThread(void *arg) {
     return NULL;
 }
 
-void *InfoLogThread(void *arg) {
+static void *InfoLogThread(__attribute__((unused)) void *arg) {
     for (int i = 0; i < times; ++i) {
         LogInfo("Info\n");
         usleep(1000);
@@ -22,7 +23,7 @@ void *InfoLogThread(void *arg) {
     return NULL;
 }
 
-void *WaringLogThread(void *arg) {
+static void *WaringLogThread(__attribute__((unused)) void *arg) {
     for (int i = 0; i < times; ++i) {
         LogWarning("Waring\n");
         usleep(1000);
@@ -30,7 +31,7 @@ void *WaringLogThread(void *arg) {
     return NULL;
 }
 
-void *ErrorLogThread(void *arg) {
+static void *ErrorLogThread(__attribute__((unused)) void *arg) {
     for (int i = 0; i < times; ++i) {
         LogError("Error\n");
         usleep(1000);
@@ -38,7 +39,7 @@ void *ErrorLogThread(void *arg) {
     return NULL;
 }
 
-int main(int argc, char **argv) {
+int main() {
     int ret = 0;
     pthread_t debug_log_tid = 0;
     pthread_t info_log_tid = 0;

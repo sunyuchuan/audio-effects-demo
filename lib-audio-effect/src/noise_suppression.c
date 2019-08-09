@@ -126,13 +126,12 @@ end:
 
 static int noise_suppression_set(EffectContext *ctx, const char *key,
                                  int flags) {
-    LogInfo("%s.\n", __func__);
     assert(NULL != ctx);
 
     priv_t *priv = ctx->priv;
     AEDictionaryEntry *entry = ae_dict_get(ctx->options, key, NULL, flags);
     if (entry) {
-        LogInfo("key = %s val = %s\n", entry->key, entry->value);
+        LogInfo("%s key = %s val = %s\n", __func__, entry->key, entry->value);
 
         sdl_mutex_lock(priv->sdl_mutex);
         if (0 == strcasecmp(entry->key, "low2mid_in_Hz")) {
