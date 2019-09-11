@@ -72,7 +72,7 @@ static int special_set(XmlyEffectContext *ctx, const char *value, int flags) {
         set_effect(ctx->effects[XmlyReverb], "mode", "Live", flags);
         set_effect(ctx->effects[Minions], "Switch", "Off", flags);
         set_effect(ctx->effects[VoiceMorph], "mode", "Original", flags);
-    }  else if (0 == strcasecmp(value, "Robot")) {
+    } else if (0 == strcasecmp(value, "Robot")) {
         // 机器人
         set_effect(ctx->effects[XmlyEcho], "mode", "None", flags);
         set_effect(ctx->effects[XmlyReverb], "mode", "None", flags);
@@ -100,6 +100,17 @@ static int special_set(XmlyEffectContext *ctx, const char *value, int flags) {
     return 0;
 }
 
+static void set_return_samples(XmlyEffectContext *ctx, const char *value,
+                               int flags) {
+    set_effect(ctx->effects[NoiseSuppression], "return_max_nb_samples", value,
+               flags);
+    set_effect(ctx->effects[Beautify], "return_max_nb_samples", value, flags);
+    set_effect(ctx->effects[XmlyEcho], "return_max_nb_samples", value, flags);
+    set_effect(ctx->effects[XmlyReverb], "return_max_nb_samples", value, flags);
+    set_effect(ctx->effects[Minions], "return_max_nb_samples", value, flags);
+    set_effect(ctx->effects[VoiceMorph], "return_max_nb_samples", value, flags);
+}
+
 int set_xmly_effect(XmlyEffectContext *ctx, const char *key, const char *value,
                     int flags) {
     LogInfo("%s key = %s value = %s.\n", __func__, key, value);
@@ -111,6 +122,9 @@ int set_xmly_effect(XmlyEffectContext *ctx, const char *key, const char *value,
         return set_effect(ctx->effects[Beautify], "mode", value, flags);
     } else if (0 == strcasecmp(key, "Special")) {
         return special_set(ctx, value, flags);
+    }
+    if (0 == strcasecmp(key, "return_max_nb_samples")) {
+        set_return_samples(ctx, value, flags);
     }
     return 0;
 }
