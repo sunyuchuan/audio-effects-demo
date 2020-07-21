@@ -23,7 +23,7 @@ static int voice_morph_close(EffectContext *ctx) {
     return 0;
 }
 
-static int voice_morph_init(EffectContext *ctx, int argc, char **argv) {
+static int voice_morph_init(EffectContext *ctx, int argc, const char **argv) {
     LogInfo("%s.\n", __func__);
     for (int i = 0; i < argc; ++i) {
         LogInfo("argv[%d] = %s\n", i, argv[i]);

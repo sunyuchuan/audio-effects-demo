@@ -85,18 +85,19 @@ src/tools/conversion.c
 src/tools/dict.c
 src/tools/fifo.c
 src/tools/log.c
-src/tools/mem.c
+# src/tools/mem.c
 src/tools/sdl_mutex.c
 src/tools/util.c
 src/voice_morph/morph_core.c
 src/beautify.c
-src/effects.c
+src/voice_effect.c
 src/minions.c
 src/noise_suppression.c
 src/voice_morph.c
-src/xmly_audio_effects.c
 src/xmly_echo.c
 src/xmly_reverb.c
+
+src/xm_audio_effects.c
 )
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Android")

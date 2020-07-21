@@ -8,9 +8,11 @@ static __inline float _reciprocal_sqrt(float x) {
 
     number = x;
     xhalf = 0.5f * x;
-    xbitcopy = *(int*)&number;
+    int *int_tmp = (int*)&number;
+    xbitcopy = *int_tmp;
     xbitcopy = 0x5f3759df - (xbitcopy >> 1);
-    xcopy = *(float*)&xbitcopy;
+    float *float_tmp = (float*)&xbitcopy;
+    xcopy = *float_tmp;
     tmp1 = xcopy * xcopy;
     tmp2 = xcopy * threeHalves;
     tmp3 = xcopy * xhalf;

@@ -1,5 +1,5 @@
 #include <sys/time.h>
-#include "effects.h"
+#include "voice_effect.h"
 #include "file_helper.h"
 #include "log.h"
 
@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     ret = OpenFile(&pcm_writer, argv[2], 1);
     if (ret < 0) goto end;
 
-    ctx = create_effect(find_effect("beautify"));
+    ctx = create_effect(find_effect("beautify"), 44100, 1);
     ret = init_effect(ctx, 0, NULL);
     if (ret < 0) goto end;
 

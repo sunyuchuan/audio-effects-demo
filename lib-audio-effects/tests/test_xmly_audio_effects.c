@@ -4,10 +4,10 @@
 #include <sys/time.h>
 #include <termios.h>
 #include <unistd.h>
-#include "effects.h"
+#include "voice_effect.h"
 #include "file_helper.h"
 #include "log.h"
-#include "xmly_audio_effects.h"
+#include "xm_audio_effects.h"
 #define MAX_NB_MSG 10
 
 typedef struct {

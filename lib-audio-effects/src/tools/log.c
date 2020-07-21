@@ -1,6 +1,7 @@
 #include "log.h"
 #include <pthread.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -92,7 +93,7 @@ static void UpdateBuffer(const LogLevel level, const char *filename,
                      syscall(__NR_gettid), GetLeveFlag(level), basename, line);
 #elif defined(__APPLE__)
         uint64_t tid;
-        pthread_threadid_np(nullptr, &tid);
+        pthread_threadid_np(NULL, &tid);
         len = strftime(self_log_buffer, sizeof(self_log_buffer), "%Y/%m/%d %T",
                        localtime(&ts.tv_sec));
         len += snprintf(self_log_buffer + len, MAX_BUFFER_SIZE - len,
@@ -189,6 +190,16 @@ void AePrintLog(const LogLevel level, const char *filename, const int line,
 
     va_end(args);
     pthread_mutex_unlock(&self_log_lock);
+    if (level >= LOG_LEVEL_FATAL) {
+        abort();
+    }
+}
+
+void AeCloseLogFile() {
+    if (self_log_file && self_log_file != stderr) {
+        fclose(self_log_file);
+        self_log_file = NULL;
+    }
 }
 
 int AeSetLogPath(const char *path) {

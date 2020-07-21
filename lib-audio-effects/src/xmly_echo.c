@@ -62,7 +62,7 @@ static void init_self_parameter(priv_t *priv) {
     }
 }
 
-static int xmly_echo_init(EffectContext *ctx, int argc, char **argv) {
+static int xmly_echo_init(EffectContext *ctx, int argc, const char **argv) {
     LogInfo("%s.\n", __func__);
     for (int i = 0; i < argc; ++i) {
         LogInfo("argv[%d] = %s\n", i, argv[i]);

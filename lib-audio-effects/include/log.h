@@ -3,17 +3,17 @@
 
 #define ERROR_OPEN_LOG_FILE -1000
 
-// 日志输出方式
+// output log mode
 typedef enum {
-    LOG_MODE_NONE = 0,  // 不输出
-    LOG_MODE_FILE,      // 写文件
-    LOG_MODE_ANDROID,   // 导出到Android Logcat
-    LOG_MODE_SCREEN     // 输出到屏幕
+    LOG_MODE_NONE = 0,  // no output
+    LOG_MODE_FILE,      // write file
+    LOG_MODE_ANDROID,   // output to Android Logcat
+    LOG_MODE_SCREEN     // output to screen
 } LogMode;
 
-// 日志级别
+// log level
 typedef enum {
-    LOG_LEVEL_TRACE,
+    LOG_LEVEL_TRACE = 0,
     LOG_LEVEL_DEBUG,
     LOG_LEVEL_VERBOSE,
     LOG_LEVEL_INFO,
@@ -24,15 +24,15 @@ typedef enum {
     LOG_LEVEL_QUIET
 } LogLevel;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
+void AeCloseLogFile();
 int AeSetLogPath(const char *path);
 void AeSetLogMode(const LogMode mode);
 void AeSetLogLevel(const LogLevel level);
 void AePrintLog(const LogLevel level, const char *filename, const int line,
                 const char *format, ...);
+
+#define FFMPEGLOG(level, TAG, format, ...) \
+    AePrintLog(level, __FILE__, __LINE__, format, TAG, ##__VA_ARGS__)
 
 #define LogTrace(format, ...) \
     AePrintLog(LOG_LEVEL_TRACE, __FILE__, __LINE__, format, ##__VA_ARGS__)
@@ -64,7 +64,4 @@ void AePrintLog(const LogLevel level, const char *filename, const int line,
                    ##__VA_ARGS__);                              \
     } while (0)
 
-#ifdef __cplusplus
-}
-#endif
 #endif  // LOG_H_

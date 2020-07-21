@@ -1,5 +1,5 @@
-#ifndef XMLY_AUDIO_EFFECTS_H_
-#define XMLY_AUDIO_EFFECTS_H_
+#ifndef XM_AUDIO_EFFECTS_H_
+#define XM_AUDIO_EFFECTS_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,4 +68,4 @@ void free_xmly_effect(XmlyEffectContext **ctx);
 #ifdef __cplusplus
 }
 #endif
-#endif  // XMLY_AUDIO_EFFECTS_H_
+#endif  // XM_AUDIO_EFFECTS_H_

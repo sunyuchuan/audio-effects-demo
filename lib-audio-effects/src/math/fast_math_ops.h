@@ -10,9 +10,11 @@ static inline float RecipSqrt(float number) {
 
     x2 = number * 0.5F;
     y = number;
-    i = *(int*)&y;
+    int *int_tmp = (int*)&y;
+    i = *int_tmp;
     j = MAGIC - (i >> 1);
-    y = *(float*)&j;
+    float *float_tmp = (float*)&j;
+    y = *float_tmp;
     y2 = y * y;
     tmp = THREEHALFS - x2 * y2;
 
@@ -25,9 +27,11 @@ static inline float Recip(float number) {
 
     x2 = number * 0.5F;
     y = number;
-    i = *(int*)&y;
+    int *int_tmp = (int*)&y;
+    i = *int_tmp;
     j = MAGIC - (i >> 1);
-    y = *(float*)&j;
+    float *float_tmp = (float*)&j;
+    y = *float_tmp;
     y2 = y * y;
     tmp = THREEHALFS - x2 * y2;
     y *= tmp;

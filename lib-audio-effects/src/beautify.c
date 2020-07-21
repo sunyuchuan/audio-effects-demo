@@ -15,7 +15,6 @@
 #include "tools/util.h"
 
 #define SAMPLE_RATE 44100
-#define MAX_NB_SAMPLES 1024
 typedef struct {
     fifo *fifo_in;
     fifo *fifo_out;
@@ -48,7 +47,7 @@ static int beautify_close(EffectContext *ctx) {
     return 0;
 }
 
-static int beautify_init(EffectContext *ctx, int argc, char **argv) {
+static int beautify_init(EffectContext *ctx, int argc, const char **argv) {
     LogInfo("%s.\n", __func__);
     for (int i = 0; i < argc; ++i) {
         LogInfo("argv[%d] = %s\n", i, argv[i]);

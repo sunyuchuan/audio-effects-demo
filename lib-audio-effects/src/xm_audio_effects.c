@@ -1,8 +1,8 @@
-#include "xmly_audio_effects.h"
+#include "xm_audio_effects.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include "effects.h"
+#include "voice_effect.h"
 #include "log.h"
 #include "tools/util.h"
 
@@ -29,12 +29,12 @@ XmlyEffectContext *create_xmly_effect() {
     // 创建多个音效
     memset(self->effects, 0, self->nb_effects * sizeof(XmlyEffectContext *));
     self->effects[NoiseSuppression] =
-        create_effect(find_effect("noise_suppression"));
-    self->effects[Beautify] = create_effect(find_effect("beautify"));
-    self->effects[XmlyEcho] = create_effect(find_effect("xmly_echo"));
-    self->effects[XmlyReverb] = create_effect(find_effect("xmly_reverb"));
-    self->effects[Minions] = create_effect(find_effect("minions"));
-    self->effects[VoiceMorph] = create_effect(find_effect("voice_morph"));
+        create_effect(find_effect("noise_suppression"), 44100, 1);
+    self->effects[Beautify] = create_effect(find_effect("beautify"), 44100, 1);
+    self->effects[XmlyEcho] = create_effect(find_effect("xmly_echo"), 44100, 1);
+    self->effects[XmlyReverb] = create_effect(find_effect("xmly_reverb"), 44100, 1);
+    self->effects[Minions] = create_effect(find_effect("minions"), 44100, 1);
+    self->effects[VoiceMorph] = create_effect(find_effect("voice_morph"), 44100, 1);
 
     return self;
 }
