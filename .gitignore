@@ -112,19 +112,19 @@ com_crashlytics_export_strings.xml
 .signing/
 
 # User-specific configurations
-.idea/libraries/
-.idea/.name
-.idea/compiler.xml
-.idea/copyright/profiles_settings.xml
-.idea/encodings.xml
-.idea/misc.xml
-.idea/scopes/scope_settings.xml
-.idea/vcs.xml
+android/.idea/libraries/
+android/.idea/.name
+android/.idea/compiler.xml
+android/.idea/copyright/profiles_settings.xml
+android/.idea/encodings.xml
+android/.idea/misc.xml
+android/.idea/scopes/scope_settings.xml
+android/.idea/vcs.xml
 
 
 # OS-specific files
-.DS_Store
-.DS_Store?
+android/.DS_Store
+android/.DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
