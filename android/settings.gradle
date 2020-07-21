@@ -1,0 +1,7 @@
+include ':audio-effects-armv5'
+include ':audio-effects-armv7a'
+include ':audio-effects-arm64'
+include ':audio-effects-x86'
+include ':audio-effects-x86_64'
+include ':audio-effects-java'
+include ':app'

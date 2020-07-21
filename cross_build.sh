@@ -14,7 +14,7 @@ build_android() {
     ##### android armv5
     mkdir -p out/$1/build-android-armeabi
     pushd out/$1/build-android-armeabi
-    cmake $ANDROID_COMMON_ARGS -DANDROID_ABI="armeabi" -DANDROID_PLATFORM=android-9 ../../../lib-audio-effect
+    cmake $ANDROID_COMMON_ARGS -DANDROID_ABI="armeabi" -DANDROID_PLATFORM=android-9 ../../../lib-audio-effects
     make
     make install
     popd
@@ -22,7 +22,7 @@ build_android() {
     ##### android armv7
     mkdir -p out/$1/build-android-armeabi-v7a
     pushd out/$1/build-android-armeabi-v7a
-    cmake $ANDROID_COMMON_ARGS -DANDROID_ABI="armeabi-v7a" -DANDROID_ARM_NEON=ON -DANDROID_PLATFORM=android-16 ../../../lib-audio-effect
+    cmake $ANDROID_COMMON_ARGS -DANDROID_ABI="armeabi-v7a" -DANDROID_ARM_NEON=ON -DANDROID_PLATFORM=android-16 ../../../lib-audio-effects
     make
     make install
     popd
@@ -30,7 +30,7 @@ build_android() {
     ##### android aarch64
     mkdir -p out/$1/build-android-arm64-v8a
     pushd out/$1/build-android-arm64-v8a
-    cmake $ANDROID_COMMON_ARGS -DANDROID_ABI="arm64-v8a" -DANDROID_PLATFORM=android-21 ../../../lib-audio-effect
+    cmake $ANDROID_COMMON_ARGS -DANDROID_ABI="arm64-v8a" -DANDROID_PLATFORM=android-21 ../../../lib-audio-effects
     make
     make install
     popd
@@ -38,7 +38,7 @@ build_android() {
     ##### android x86
     mkdir -p out/$1/build-android-x86
     pushd out/$1/build-android-x86
-    cmake $ANDROID_COMMON_ARGS -DANDROID_ABI="x86" -DANDROID_PLATFORM=android-21 ../../../lib-audio-effect
+    cmake $ANDROID_COMMON_ARGS -DANDROID_ABI="x86" -DANDROID_PLATFORM=android-21 ../../../lib-audio-effects
     make
     make install
     popd
@@ -46,7 +46,7 @@ build_android() {
     ##### android x86_64
     mkdir -p out/$1/build-android-x86_64
     pushd out/$1/build-android-x86_64
-    cmake $ANDROID_COMMON_ARGS -DANDROID_ABI="x86_64" -DANDROID_PLATFORM=android-21 ../../../lib-audio-effect
+    cmake $ANDROID_COMMON_ARGS -DANDROID_ABI="x86_64" -DANDROID_PLATFORM=android-21 ../../../lib-audio-effects
     make
     make install
     popd
@@ -58,7 +58,7 @@ build_ios() {
     ##### ios simulator i386
     mkdir -p out/$1/build-ios-sim
     pushd out/$1/build-ios-sim
-    cmake $IOS_COMMON_ARGS -DIOS_PLATFORM=SIMULATOR ../../../lib-audio-effect
+    cmake $IOS_COMMON_ARGS -DIOS_PLATFORM=SIMULATOR ../../../lib-audio-effects
     make
     make install
     popd
@@ -66,7 +66,7 @@ build_ios() {
     ##### ios simulator x86_64
     mkdir -p out/$1/build-ios-sim64
     pushd out/$1/build-ios-sim64
-    cmake $IOS_COMMON_ARGS -DIOS_PLATFORM=SIMULATOR64 ../../../lib-audio-effect
+    cmake $IOS_COMMON_ARGS -DIOS_PLATFORM=SIMULATOR64 ../../../lib-audio-effects
     make
     make install
     popd
@@ -75,7 +75,7 @@ build_ios() {
     ##### ios armv7 armv7s arm64 arm64e
     mkdir -p out/$1/build-ios
     pushd out/$1/build-ios
-    cmake $IOS_COMMON_ARGS -DIOS_PLATFORM=OS ../../../lib-audio-effect
+    cmake $IOS_COMMON_ARGS -DIOS_PLATFORM=OS ../../../lib-audio-effects
     make
     make install
     popd

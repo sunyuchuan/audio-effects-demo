@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/android.iml" filepath="$PROJECT_DIR$/android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/audio-effects-arm64/audio-effects-arm64.iml" filepath="$PROJECT_DIR$/audio-effects-arm64/audio-effects-arm64.iml" />
+      <module fileurl="file://$PROJECT_DIR$/audio-effects-armv5/audio-effects-armv5.iml" filepath="$PROJECT_DIR$/audio-effects-armv5/audio-effects-armv5.iml" />
+      <module fileurl="file://$PROJECT_DIR$/audio-effects-armv7a/audio-effects-armv7a.iml" filepath="$PROJECT_DIR$/audio-effects-armv7a/audio-effects-armv7a.iml" />
+      <module fileurl="file://$PROJECT_DIR$/audio-effects-java/audio-effects-java.iml" filepath="$PROJECT_DIR$/audio-effects-java/audio-effects-java.iml" />
+      <module fileurl="file://$PROJECT_DIR$/audio-effects-x86/audio-effects-x86.iml" filepath="$PROJECT_DIR$/audio-effects-x86/audio-effects-x86.iml" />
+      <module fileurl="file://$PROJECT_DIR$/audio-effects-x86_64/audio-effects-x86_64.iml" filepath="$PROJECT_DIR$/audio-effects-x86_64/audio-effects-x86_64.iml" />
+    </modules>
+  </component>
+</project>

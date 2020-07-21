@@ -8,7 +8,7 @@ UNAME_S=$(uname -s)
 UNAME_SM=$(uname -sm)
 echo "package on $UNAME_SM"
 
-NAME=effect
+NAME=audio-effects
 
 ##### package android lib
 package_android() {
@@ -25,26 +25,26 @@ package_android() {
         mkdir -p $ANDROIDPKGNAME/x86_64
         mkdir -p $ANDROIDPKGNAME/include
 
-        echo "copy effect lib"
-        cp -a out/Release/build-android-armeabi/install/lib       $ANDROIDPKGNAME/armeabi/
-        cp -a out/Release/build-android-armeabi-v7a/install/lib   $ANDROIDPKGNAME/armeabi-v7a/
-        cp -a out/Release/build-android-arm64-v8a/install/lib     $ANDROIDPKGNAME/arm64-v8a/
-        cp -a out/Release/build-android-x86/install/lib           $ANDROIDPKGNAME/x86/
-        cp -a out/Release/build-android-x86_64/install/lib        $ANDROIDPKGNAME/x86_64/
+        echo "copy effects lib"
+        cp -a out/Release/build-android-armeabi/install/lib/libaudio_effects.a $ANDROIDPKGNAME/armeabi/
+        cp -a out/Release/build-android-armeabi-v7a/install/lib/libaudio_effects.a $ANDROIDPKGNAME/armeabi-v7a/
+        cp -a out/Release/build-android-arm64-v8a/install/lib/libaudio_effects.a $ANDROIDPKGNAME/arm64-v8a/
+        cp -a out/Release/build-android-x86/install/lib/libaudio_effects.a $ANDROIDPKGNAME/x86/
+        cp -a out/Release/build-android-x86_64/install/lib/libaudio_effects.a $ANDROIDPKGNAME/x86_64/
 
         echo "copy ffmpeg lib"
-        cp prebuilt/android/prebuilt/ffmpeg-armv5/libijkffmpeg-armeabi.so             $ANDROIDPKGNAME/armeabi/
-        cp prebuilt/android/prebuilt/ffmpeg-armv7a/libijkffmpeg-armeabi-v7a.so        $ANDROIDPKGNAME/armeabi-v7a/
-        cp prebuilt/android/prebuilt/ffmpeg-arm64/libijkffmpeg-arm64-v8a.so           $ANDROIDPKGNAME/arm64-v8a/
-        cp prebuilt/android/prebuilt/ffmpeg-x86/libijkffmpeg-x86.so                   $ANDROIDPKGNAME/x86/
-        cp prebuilt/android/prebuilt/ffmpeg-x86_64/libijkffmpeg-x86_64.so             $ANDROIDPKGNAME/x86_64/
+        cp prebuilt/android/ffmpeg-armv5/libijkffmpeg-armeabi.so             $ANDROIDPKGNAME/armeabi/
+        cp prebuilt/android/ffmpeg-armv7a/libijkffmpeg-armeabi-v7a.so        $ANDROIDPKGNAME/armeabi-v7a/
+        cp prebuilt/android/ffmpeg-arm64/libijkffmpeg-arm64-v8a.so           $ANDROIDPKGNAME/arm64-v8a/
+        cp prebuilt/android/ffmpeg-x86/libijkffmpeg-x86.so                   $ANDROIDPKGNAME/x86/
+        cp prebuilt/android/ffmpeg-x86_64/libijkffmpeg-x86_64.so             $ANDROIDPKGNAME/x86_64/
 
         echo "copy header"
-        cp -r out/Release/build-android-arm64-v8a/install/include/* $ANDROIDPKGNAME/include/
+        cp -r out/Release/build-android-armeabi-v7a/install/include/* $ANDROIDPKGNAME/include/
 
         # echo "move $ANDROIDPKGNAME to sdk"
-        rm -rf android/AudioEffect/libeffect/src/main/jni/$ANDROIDPKGNAME
-        mv $ANDROIDPKGNAME android/AudioEffect/libeffect/src/main/jni
+        rm -rf android/lib-audio-effects/$ANDROIDPKGNAME
+        mv $ANDROIDPKGNAME android/lib-audio-effects/
     else
         echo "Need Run ./cross_build.sh Release Frist !"
     fi
