@@ -62,6 +62,4 @@ struct EffectContext_T {
         }                                                                   \
     }
 
-extern const char *show_usage(EffectContext *ctx);
-
 #endif  // AUDIO_EFFECT_EFFECT_STRUCT_H_

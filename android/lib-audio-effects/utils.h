@@ -53,11 +53,6 @@ fail:
     return -1;
 }
 
-static int SDL_JNI_ThrowIllegalStateException(JNIEnv *env, const char* msg)
-{
-    return SDL_JNI_ThrowException(env, "java/lang/IllegalStateException", msg);
-}
-
 static bool J4A_ExceptionCheck__catchAll(JNIEnv *env)
 {
     if ((*env)->ExceptionCheck(env)) {

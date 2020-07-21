@@ -35,7 +35,7 @@ const EffectHandler *find_effect(char const *name) {
 }
 
 EffectContext *create_effect(const EffectHandler *handler,
-                             const int sample_rate, const int channels) {
+        const int sample_rate, const int channels) {
     if (NULL == handler) return NULL;
     EffectContext *self = (EffectContext *)calloc(1, sizeof(EffectContext));
     atomic_store(&self->return_max_nb_samples, false);
@@ -59,8 +59,8 @@ int init_effect(EffectContext *ctx, int argc, const char **argv) {
     return ctx->handler.init(ctx, argc, argv);
 }
 
-int set_effect(EffectContext *ctx, const char *key, const char *value,
-               int flags) {
+int set_effect(EffectContext *ctx,
+        const char *key, const char *value, int flags) {
     if(NULL == ctx) {
         return -1;
     }
@@ -75,8 +75,8 @@ int set_effect(EffectContext *ctx, const char *key, const char *value,
     return ctx->handler.set(ctx, key, flags);
 }
 
-int send_samples(EffectContext *ctx, const void *samples,
-                 const size_t nb_samples) {
+int send_samples(EffectContext *ctx,
+        const void *samples, const size_t nb_samples) {
     if(NULL == ctx) {
         return -1;
     }
@@ -84,8 +84,8 @@ int send_samples(EffectContext *ctx, const void *samples,
     return ctx->handler.send(ctx, samples, nb_samples);
 }
 
-int receive_samples(EffectContext *ctx, void *samples,
-                    const size_t max_nb_samples) {
+int receive_samples(EffectContext *ctx,
+        void *samples, const size_t max_nb_samples) {
     if(NULL == ctx) {
         return -1;
     }

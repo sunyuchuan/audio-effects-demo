@@ -9,9 +9,6 @@
 
 #define JNI_CLASS_AUDIO_EFFECTS "com/xmly/audio_effects/XmAudioEffects"
 
-extern void SetFFmpegLogLevel(int log_level);
-extern void RegisterFFmpeg();
-
 typedef struct xm_audio_effects_fields_t {
     pthread_mutex_t mutex;
     jclass clazz;
@@ -33,35 +30,35 @@ jni_mNativeXMAudioEffects_set(JNIEnv *env, jobject thiz, jlong value)
     (*env)->SetLongField(env, thiz, g_clazz.field_mNativeXmAudioEffects, value);
 }
 
-static XmlyEffectContext *
+static XmEffectContext *
 jni_get_xm_audio_effects(JNIEnv *env, jobject thiz)
 {
     pthread_mutex_lock(&g_clazz.mutex);
 
-    XmlyEffectContext *ctx = (XmlyEffectContext *) (intptr_t) jni_mNativeXMAudioEffects_get(env, thiz);
+    XmEffectContext *ctx = (XmEffectContext *) (intptr_t) jni_mNativeXMAudioEffects_get(env, thiz);
     if (ctx) {
-        //xmau_inc_ref(ctx);
+        xmae_inc_ref(ctx);
     }
 
     pthread_mutex_unlock(&g_clazz.mutex);
     return ctx;
 }
 
-static XmlyEffectContext *
-jni_set_xm_audio_effects(JNIEnv *env, jobject thiz, XmlyEffectContext *ctx)
+static XmEffectContext *
+jni_set_xm_audio_effects(JNIEnv *env, jobject thiz, XmEffectContext *ctx)
 {
     pthread_mutex_lock(&g_clazz.mutex);
 
-    XmlyEffectContext *oldctx = (XmlyEffectContext *) (intptr_t) jni_mNativeXMAudioEffects_get(env, thiz);
+    XmEffectContext *oldctx = (XmEffectContext *) (intptr_t) jni_mNativeXMAudioEffects_get(env, thiz);
     if (ctx) {
-        //xmau_inc_ref(ctx);
+        xmae_inc_ref(ctx);
     }
     jni_mNativeXMAudioEffects_set(env, thiz, (intptr_t) ctx);
 
     pthread_mutex_unlock(&g_clazz.mutex);
 
     if (oldctx != NULL) {
-        //xmau_dec_ref_p(&oldctx);
+        xmae_dec_ref_p(&oldctx);
     }
 
     return oldctx;
@@ -71,7 +68,8 @@ static void
 XMAudioEffects_release(JNIEnv *env, jobject thiz)
 {
     LOGI("%s\n", __func__);
-    XmlyEffectContext *ctx = jni_get_xm_audio_effects(env, thiz);
+
+    XmEffectContext *ctx = jni_get_xm_audio_effects(env, thiz);
     if(ctx == NULL) {
         LOGW("XMAudioEffects_release ctx is NULL\n");
         goto LABEL_RETURN;
@@ -79,70 +77,79 @@ XMAudioEffects_release(JNIEnv *env, jobject thiz)
 
     jni_set_xm_audio_effects(env, thiz, NULL);
 LABEL_RETURN:
-    free_xmly_effect(&ctx);
-    //xmau_dec_ref_p(&ctx);
+    xmae_dec_ref_p(&ctx);
 }
 
 static int
 XMAudioEffects_receiveSamples(JNIEnv *env, jobject thiz,
-    jshortArray samples, jint max_nb_samples) {
+        jshortArray samples, jint max_nb_samples) {
     LOGI("%s\n", __func__);
+
     int ret = -1;
-    XmlyEffectContext *ctx = jni_get_xm_audio_effects(env, thiz);
+    XmEffectContext *ctx = jni_get_xm_audio_effects(env, thiz);
     JNI_CHECK_GOTO(ctx, env, "java/lang/IllegalStateException", "AEjni: receiveSamples: null ctx", LABEL_RETURN);
 
     jshort *samples_ = (*env)->GetShortArrayElements(env, samples, NULL);
-    ret = xmly_receive_samples(ctx, samples_, max_nb_samples);
-    (*env)->ReleaseShortArrayElements(env, samples, samples_, 0);
+
+    ret = xm_effect_receive_samples(ctx, samples_, max_nb_samples);
+
+    if (samples_) (*env)->ReleaseShortArrayElements(env, samples, samples_, 0);
 LABEL_RETURN:
-    //xmau_dec_ref_p(&ctx);
+    xmae_dec_ref_p(&ctx);
     return ret;
 }
 
 static int
 XMAudioEffects_sendSamples(JNIEnv *env, jobject thiz,
-    jshortArray samples, jint nb_samples) {
+        jshortArray samples, jint nb_samples) {
     LOGI("%s\n", __func__);
+
     int ret = -1;
-    XmlyEffectContext *ctx = jni_get_xm_audio_effects(env, thiz);
+    XmEffectContext *ctx = jni_get_xm_audio_effects(env, thiz);
     JNI_CHECK_GOTO(ctx, env, "java/lang/IllegalStateException", "AEjni: sendSamples: null ctx", LABEL_RETURN);
 
     jshort *samples_ = (*env)->GetShortArrayElements(env, samples, NULL);
-    ret = xmly_send_samples(ctx, samples_, nb_samples);
-    (*env)->ReleaseShortArrayElements(env, samples, samples_, 0);
+    ret = xm_effect_send_samples(ctx, samples_, nb_samples);
+
+    if (samples_) (*env)->ReleaseShortArrayElements(env, samples, samples_, 0);
 LABEL_RETURN:
-    //xmau_dec_ref_p(&ctx);
+    xmae_dec_ref_p(&ctx);
     return ret;
 }
 
 static int
 XMAudioEffects_setEffects(JNIEnv *env, jobject thiz,
-    jstring key, jstring value, jint flags) {
+        jstring key, jstring value, jint flags) {
     LOGI("%s\n", __func__);
+
     int ret = -1;
-    XmlyEffectContext *ctx = jni_get_xm_audio_effects(env, thiz);
+    XmEffectContext *ctx = jni_get_xm_audio_effects(env, thiz);
     JNI_CHECK_GOTO(ctx, env, "java/lang/IllegalStateException", "AEjni: setEffects: null ctx", LABEL_RETURN);
 
     const char *key_ = (*env)->GetStringUTFChars(env, key, 0);
     const char *value_ = (*env)->GetStringUTFChars(env, value, 0);
-    ret = set_xmly_effect(ctx, key_, value_, flags);
-    (*env)->ReleaseStringUTFChars(env, key, key_);
-    (*env)->ReleaseStringUTFChars(env, value, value_);
+
+    ret = set_xm_effect(ctx, key_, value_, flags);
+
+    if (key_) (*env)->ReleaseStringUTFChars(env, key, key_);
+    if (value_) (*env)->ReleaseStringUTFChars(env, value, value_);
 LABEL_RETURN:
-    //xmau_dec_ref_p(&ctx);
+    xmae_dec_ref_p(&ctx);
     return ret;
 }
 
 static int
-XMAudioEffects_init(JNIEnv *env, jobject thiz) {
+XMAudioEffects_init(JNIEnv *env, jobject thiz,
+        jint sampleRate, jint nbChannels) {
     LOGI("%s\n", __func__);
+
     int ret = -1;
-    XmlyEffectContext *ctx = jni_get_xm_audio_effects(env, thiz);
+    XmEffectContext *ctx = jni_get_xm_audio_effects(env, thiz);
     JNI_CHECK_GOTO(ctx, env, "java/lang/IllegalStateException", "AEjni: init: null ctx", LABEL_RETURN);
 
-    ret = init_xmly_effect(ctx);
+    ret = init_xm_effect_context(ctx, sampleRate, nbChannels);
 LABEL_RETURN:
-    //xmau_dec_ref_p(&ctx);
+    xmae_dec_ref_p(&ctx);
     return ret;
 }
 
@@ -150,7 +157,7 @@ static void
 XMAudioEffects_close_log_file(JNIEnv *env, jobject thiz)
 {
     LOGI("%s\n", __func__);
-    //AeCloseLogFile();
+    AeCloseLogFile();
 }
 
 static void
@@ -160,7 +167,6 @@ XMAudioEffects_set_log(JNIEnv *env, jobject thiz,
     LOGI("%s\n", __func__);
     AeSetLogMode(logMode);
     AeSetLogLevel(logLevel);
-    //SetFFmpegLogLevel(logLevel);
 
     if(logMode == LOG_MODE_FILE) {
         if(outLogPath == NULL) {
@@ -169,8 +175,7 @@ XMAudioEffects_set_log(JNIEnv *env, jobject thiz,
         } else {
             const char *out_log_path_ = (*env)->GetStringUTFChars(env, outLogPath, 0);
             AeSetLogPath(out_log_path_);
-            if (out_log_path_)
-                (*env)->ReleaseStringUTFChars(env, outLogPath, out_log_path_);
+            if (out_log_path_) (*env)->ReleaseStringUTFChars(env, outLogPath, out_log_path_);
         }
     }
 }
@@ -179,20 +184,19 @@ static void
 XMAudioEffects_setup(JNIEnv *env, jobject thiz)
 {
     LOGI("%s\n", __func__);
-    XmlyEffectContext *ctx = create_xmly_effect();
+    XmEffectContext *ctx = create_xm_effect_context();
     JNI_CHECK_GOTO(ctx, env, "java/lang/OutOfMemoryError", "AEjni: native_setup: create failed", LABEL_RETURN);
 
     jni_set_xm_audio_effects(env, thiz, ctx);
 LABEL_RETURN:
-    //xmau_dec_ref_p(&ctx);
-    return;
+    xmae_dec_ref_p(&ctx);
 }
 
 static JNINativeMethod g_methods[] = {
     { "native_setup", "()V", (void *) XMAudioEffects_setup },
     { "native_set_log", "(IILjava/lang/String;)V", (void *) XMAudioEffects_set_log },
     { "native_close_log_file", "()V", (void *) XMAudioEffects_close_log_file },
-    { "native_init", "()V", (void *) XMAudioEffects_init },
+    { "native_init", "(II)V", (void *) XMAudioEffects_init },
     { "native_setEffects", "(Ljava/lang/String;Ljava/lang/String;I)I", (void *) XMAudioEffects_setEffects },
     { "native_sendSamples", "([SI)I", (void *) XMAudioEffects_sendSamples },
     { "native_receiveSamples", "([SI)I", (void *) XMAudioEffects_receiveSamples },
@@ -215,8 +219,6 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void *reserved)
     (*env)->RegisterNatives(env, g_clazz.clazz, g_methods, NELEM(g_methods));
 
     g_clazz.field_mNativeXmAudioEffects = (*env)->GetFieldID(env, g_clazz.clazz, "mNativeXmAudioEffects", "J");
-
-    //RegisterFFmpeg();
 
     return JNI_VERSION_1_4;
 }

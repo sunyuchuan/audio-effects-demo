@@ -7,63 +7,87 @@ extern "C" {
 
 #include <stddef.h>
 
-typedef struct XmlyEffectContext_T XmlyEffectContext;
+typedef struct XmEffectContext XmEffectContext;
 
 /**
- * @brief 创建 XmlyEffectContext
+ * @brief Reference count subtract 1
  *
- * @return XmlyEffectContext*
+ * @param self XmEffectContext
  */
-XmlyEffectContext *create_xmly_effect();
+void xmae_dec_ref(XmEffectContext *self);
 
 /**
- * @brief 初始化XmlyEffectContext
+ * @brief Reference count subtract 1
  *
- * @param ctx
- * @return int
+ * @param self XmEffectContext
  */
-int init_xmly_effect(XmlyEffectContext *ctx);
+void xmae_dec_ref_p(XmEffectContext **self);
 
 /**
- * @brief 设置参数
+ * @brief Reference count plus 1
  *
- * @param ctx XmlyEffectContext
- * @param key 关键字
- * @param value 值
+ * @param self XmEffectContext
+ */
+void xmae_inc_ref(XmEffectContext *self);
+
+/**
+ * @brief free XmEffectContext
+ *
+ * @param ctx XmEffectContext **
+ */
+void free_xm_effect_context(XmEffectContext **ctx);
+
+/**
+ * @brief Get the data after adding special effects
+ *
+ * @param ctx XmEffectContext
+ * @param samples the data after adding special effects
+ * @param max_nb_samples buffer size
+ * @return effective buffer size
+ */
+int xm_effect_receive_samples(XmEffectContext *ctx,
+    void *samples, const size_t max_nb_samples);
+
+/**
+ * @brief send raw samples
+ *
+ * @param ctx XmEffectContext
+ * @param samples pcm data
+ * @param nb_samples number of samples
+ * @return the number of processed data
+ */
+int xm_effect_send_samples(XmEffectContext *ctx,
+    const void *samples, const size_t nb_samples);
+
+/**
+ * @brief set effect
+ *
+ * @param ctx XmEffectContext
+ * @param key
+ * @param value
  * @param flags
- * @return int
+ * @return Less than 0 fail
  */
-int set_xmly_effect(XmlyEffectContext *ctx, const char *key, const char *value,
-                    int flags);
+int set_xm_effect(XmEffectContext *ctx,
+    const char *key, const char *value, int flags);
 
 /**
- * @brief 传入需要处理的数据
+ * @brief init XmEffectContext
  *
- * @param ctx XmlyEffectContext
- * @param samples 数据
- * @param nb_samples 样本点个数
- * @return int 返回处理的样本点个数
+ * @param ctx XmEffectContext *
+ * @param sample_rate sample rate of pcm data
+ * @param nb_channels number channels of pcm data
+ * @return Less than 0 fail
  */
-int xmly_send_samples(XmlyEffectContext *ctx, const void *samples,
-                      const size_t nb_samples);
+int init_xm_effect_context(XmEffectContext *ctx,
+        int sample_rate, int nb_channels);
 
 /**
- * @brief 去除处理后的数据
+ * @brief create XmEffectContext
  *
- * @param ctx XmlyEffectContext
- * @param samples 处理后的数据
- * @param max_nb_samples buffer的容量
- * @return int 实际填充的样本点个数
+ * @return XmEffectContext*
  */
-int xmly_receive_samples(XmlyEffectContext *ctx, void *samples,
-                         const size_t max_nb_samples);
-
-/**
- * @brief 释放 XmlyEffectContext
- *
- * @param ctx
- */
-void free_xmly_effect(XmlyEffectContext **ctx);
+XmEffectContext *create_xm_effect_context();
 
 #ifdef __cplusplus
 }

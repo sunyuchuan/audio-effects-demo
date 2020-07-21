@@ -16,8 +16,8 @@ target_link_libraries(test_noise_suppression audio_effects m pthread)
 add_executable(test_voice_morph test_voice_morph.c)
 target_link_libraries(test_voice_morph audio_effects m pthread)
 
-add_executable(test_xmly_audio_effects test_xmly_audio_effects.c)
-target_link_libraries(test_xmly_audio_effects audio_effects m pthread)
+add_executable(test_xm_audio_effects test_xm_audio_effects.c)
+target_link_libraries(test_xm_audio_effects audio_effects m pthread)
 
 add_executable(test_xmly_echo test_xmly_echo.c)
 target_link_libraries(test_xmly_echo audio_effects m pthread)

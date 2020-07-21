@@ -62,7 +62,7 @@ public class XmAudioEffects {
         setLogModeAndLevel(LOG_MODE_ANDROID, LOG_LEVEL_DEBUG, null);
         try {
             native_setup();
-            native_init();
+            native_init(DefaultSampleRate, DefaultChannelNumber);
         } catch (OutOfMemoryError e) {
             e.printStackTrace();
         }
@@ -112,9 +112,9 @@ public class XmAudioEffects {
     /**
      * 初始化
      */
-    public void initEffects() {
+    public void initEffects(int sampleRate, int nbChannels) {
         try {
-            native_init();
+            native_init(sampleRate, nbChannels);
         } catch (IllegalStateException e) {
             e.printStackTrace();
         }
@@ -177,7 +177,7 @@ public class XmAudioEffects {
     private native int native_receiveSamples(short[] buffer, int max_nb_samples);
     private native int native_sendSamples(short[] samples, int nb_samples);
     private native int native_setEffects(String key, String value, int flag);
-    private native void native_init();
+    private native void native_init(int sampleRate, int nbChannels);
     private native void native_set_log(int logMode, int logLevel, String outLogPath);
     private native void native_close_log_file();
     private native void native_setup();

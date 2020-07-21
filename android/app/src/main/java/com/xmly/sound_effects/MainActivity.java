@@ -2,6 +2,8 @@ package com.xmly.sound_effects;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -38,58 +40,27 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
     private Thread mThread;
     private short[] speechSamples = new short[maxNbSamples];
     private XmAudioEffects mAudioEffects = null;
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+    private Handler mHandler = null;
+    private static final int MSG_PROGRESS = 1;
+    private static final int MSG_COMPLETED = 2;
+    private volatile boolean abort = false;
 
-        getSystemPermission();
-
-        mAudioEffects = new XmAudioEffects();
-        mAudioEffects.setEffects("return_max_nb_samples", "false", 0);
-
-        mBtnRecord = findViewById(R.id.btn_record);
-        mBtnRecord.setOnClickListener(this);
-
-        mBtnPlay = findViewById(R.id.btn_audition);
-        mBtnPlay.setOnClickListener(this);
-
-        ((RadioGroup) findViewById(R.id.voice_group)).setOnCheckedChangeListener(this);
-        ((RadioGroup) findViewById(R.id.eq_group)).setOnCheckedChangeListener(this);
-        ((RadioGroup) findViewById(R.id.ns_group)).setOnCheckedChangeListener(this);
-
-        mPlayer = new AudioPlayer();
-        mCapturer = new AudioCapturer();
-        mCapturer.setOnAudioFrameCapturedListener(MainActivity.this);
-        createOutputFile(speech);
-        createOutputFile(effect);
-    }
-
-    @Override
-    protected void onStop() {
-        stopPlay();
-        stopRecord();
-        super.onStop();
-    }
-
-    private void getReadExternalStoragePermission() {
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                // TODO: show explanation
-            } else {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
-            }
-        }
-    }
-
-    private void getWriteExternalStoragePermission() {
+    private void getExternalStoragePermission() {
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
                 // TODO: show explanation
             } else {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+            }
+        }
+
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                // TODO: show explanation
+            } else {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
             }
         }
     }
@@ -103,12 +74,6 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 1);
             }
         }
-    }
-
-    private void getSystemPermission() {
-        getReadExternalStoragePermission();
-        getWriteExternalStoragePermission();
-        getRecordAudioPermission();
     }
 
     private static boolean createOutputFile(String path) {
@@ -144,6 +109,71 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
         return true;
     }
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        getExternalStoragePermission();
+        getRecordAudioPermission();
+
+        createOutputFile(speech);
+        createOutputFile(effect);
+
+        mBtnRecord = findViewById(R.id.btn_record);
+        mBtnRecord.setOnClickListener(this);
+
+        mBtnPlay = findViewById(R.id.btn_audition);
+        mBtnPlay.setOnClickListener(this);
+
+        ((RadioGroup) findViewById(R.id.voice_group)).setOnCheckedChangeListener(this);
+        ((RadioGroup) findViewById(R.id.eq_group)).setOnCheckedChangeListener(this);
+        ((RadioGroup) findViewById(R.id.ns_group)).setOnCheckedChangeListener(this);
+
+        mPlayer = new AudioPlayer();
+        mCapturer = new AudioCapturer();
+        mCapturer.setOnAudioFrameCapturedListener(MainActivity.this);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        if (mAudioEffects != null)
+            mAudioEffects.release();
+        mAudioEffects = new XmAudioEffects();
+        mAudioEffects.setEffects("return_max_nb_samples", "false", 0);
+
+        if (mHandler == null) {
+            mHandler = new Handler() {
+                @Override
+                public void handleMessage(Message msg) {
+                    switch (msg.what) {
+                        case MSG_PROGRESS:
+                            break;
+                        case MSG_COMPLETED:
+                            stopAudition();
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            };
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        if (mAudioEffects != null)
+            mAudioEffects.release();
+        mAudioEffects = null;
+
+        stopAudition();
+        stopRecord();
+
+        super.onStop();
+    }
+
     private void OpenPcmFiles() {
         // 打开录制文件
         File outSpeech = new File(speech);
@@ -164,7 +194,7 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
         }
     }
 
-    private class PlayerRunnable implements Runnable {
+    private class AuditionRunnable implements Runnable {
         @Override
         public void run() {
             try {
@@ -181,7 +211,8 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
                 // 创建字节数组
                 int bufferSize = 4096;
                 byte[] data = new byte[bufferSize];
-                while (true) {
+                abort = false;
+                while (!abort) {
                     // 读取内容，放到字节数组里面
                     int readsize = isEffect.read(data);
                     if (readsize <= 0) {
@@ -193,6 +224,7 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
                     }
                 }
                 isEffect.close();
+                mHandler.sendMessage(mHandler.obtainMessage(MSG_COMPLETED));
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -224,15 +256,16 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
         }
     }
 
-    private void startPlay() {
+    private void startAudition() {
         mBtnPlay.setText("停止");
-        mThread = new Thread(new PlayerRunnable());
+        mThread = new Thread(new AuditionRunnable());
         mThread.setPriority(Thread.MAX_PRIORITY);
         mThread.start();
     }
 
-    private void stopPlay() {
+    private void stopAudition() {
         mBtnPlay.setText("试听");
+        abort = true;
         if (null != mThread && mThread.isAlive()) {
             mThread.interrupt();
         }
@@ -243,7 +276,7 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
         int id = v.getId();
         if (id == R.id.btn_record) {
             if (mBtnRecord.getText().toString().contentEquals("录音")) {
-                stopPlay();
+                stopAudition();
                 startRecord();
             } else if (mBtnRecord.getText().toString().contentEquals("停止")) {
                 stopRecord();
@@ -251,9 +284,9 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
         } else if (id == R.id.btn_audition) {
             if (mBtnPlay.getText().toString().contentEquals("试听")) {
                 stopRecord();
-                startPlay();
+                startAudition();
             } else if (mBtnPlay.getText().toString().contentEquals("停止")) {
-                stopPlay();
+                stopAudition();
             }
         }
     }

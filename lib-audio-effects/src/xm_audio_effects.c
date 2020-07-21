@@ -5,6 +5,7 @@
 #include "voice_effect.h"
 #include "log.h"
 #include "tools/util.h"
+#include <pthread.h>
 
 enum EffectType {
     NoiseSuppression = 0,
@@ -12,48 +13,18 @@ enum EffectType {
     XmlyEcho,
     XmlyReverb,
     Minions,
-    VoiceMorph
+    VoiceMorph,
+    MAX_NB_EFFECTS
 };
 
-struct XmlyEffectContext_T {
+struct XmEffectContext {
+    volatile int ref_count;
+    pthread_mutex_t mutex;
     size_t nb_effects;
-    EffectContext *effects[VoiceMorph - NoiseSuppression + 1];
+    EffectContext *effects[MAX_NB_EFFECTS];
 };
 
-XmlyEffectContext *create_xmly_effect() {
-    XmlyEffectContext *self =
-        (XmlyEffectContext *)calloc(1, sizeof(XmlyEffectContext));
-    if (NULL == self) return NULL;
-
-    self->nb_effects = VoiceMorph - NoiseSuppression + 1;
-    // 创建多个音效
-    memset(self->effects, 0, self->nb_effects * sizeof(XmlyEffectContext *));
-    self->effects[NoiseSuppression] =
-        create_effect(find_effect("noise_suppression"), 44100, 1);
-    self->effects[Beautify] = create_effect(find_effect("beautify"), 44100, 1);
-    self->effects[XmlyEcho] = create_effect(find_effect("xmly_echo"), 44100, 1);
-    self->effects[XmlyReverb] = create_effect(find_effect("xmly_reverb"), 44100, 1);
-    self->effects[Minions] = create_effect(find_effect("minions"), 44100, 1);
-    self->effects[VoiceMorph] = create_effect(find_effect("voice_morph"), 44100, 1);
-
-    return self;
-}
-
-int init_xmly_effect(XmlyEffectContext *ctx) {
-    int error = 0;
-    for (short i = NoiseSuppression; i <= VoiceMorph; ++i) {
-        if (NULL != ctx->effects[i]) {
-            int ret = init_effect(ctx->effects[i], 0, NULL);
-            if (ret < 0) {
-                LogError("%s i = %d ret = %d.\n", __func__, i, ret);
-                error = ret;
-            }
-        }
-    }
-    return error;
-}
-
-static int special_set(XmlyEffectContext *ctx, const char *value, int flags) {
+static int special_set(XmEffectContext *ctx, const char *value, int flags) {
     if (0 == strcasecmp(value, "Original")) {
         // 无变声
         set_effect(ctx->effects[XmlyEcho], "mode", "None", flags);
@@ -100,10 +71,9 @@ static int special_set(XmlyEffectContext *ctx, const char *value, int flags) {
     return 0;
 }
 
-static void set_return_samples(XmlyEffectContext *ctx, const char *value,
-                               int flags) {
-    set_effect(ctx->effects[NoiseSuppression], "return_max_nb_samples", value,
-               flags);
+static void set_return_samples(XmEffectContext *ctx,
+        const char *value, int flags) {
+    set_effect(ctx->effects[NoiseSuppression], "return_max_nb_samples", value, flags);
     set_effect(ctx->effects[Beautify], "return_max_nb_samples", value, flags);
     set_effect(ctx->effects[XmlyEcho], "return_max_nb_samples", value, flags);
     set_effect(ctx->effects[XmlyReverb], "return_max_nb_samples", value, flags);
@@ -111,8 +81,75 @@ static void set_return_samples(XmlyEffectContext *ctx, const char *value,
     set_effect(ctx->effects[VoiceMorph], "return_max_nb_samples", value, flags);
 }
 
-int set_xmly_effect(XmlyEffectContext *ctx, const char *key, const char *value,
-                    int flags) {
+void xmae_inc_ref(XmEffectContext *self)
+{
+    assert(self);
+    __sync_fetch_and_add(&self->ref_count, 1);
+}
+
+void xmae_dec_ref(XmEffectContext *self)
+{
+    if (!self)
+        return;
+
+    int ref_count = __sync_sub_and_fetch(&self->ref_count, 1);
+    if (ref_count == 0) {
+        LogInfo("%s xmae_dec_ref(): ref=0\n", __func__);
+        free_xm_effect_context(&self);
+    }
+}
+
+void xmae_dec_ref_p(XmEffectContext **self)
+{
+    if (!self || !*self)
+        return;
+
+    xmae_dec_ref(*self);
+    *self = NULL;
+}
+
+void free_xm_effect_context(XmEffectContext **ctx) {
+    LogInfo("%s.\n", __func__);
+    if (NULL == ctx || NULL == *ctx) return;
+    XmEffectContext *self = *ctx;
+
+    for (short i = 0; i < MAX_NB_EFFECTS; ++i) {
+        if (self->effects[i]) {
+            free_effect(self->effects[i]);
+            self->effects[i] = NULL;
+        }
+    }
+    pthread_mutex_destroy(&(*ctx)->mutex);
+    free(*ctx);
+    *ctx = NULL;
+}
+
+int xm_effect_receive_samples(XmEffectContext *ctx,
+        void *samples, const size_t max_nb_samples) {
+    int ret = 0;
+    for (short i = 0; i < MAX_NB_EFFECTS - 1; ++i) {
+        if (NULL == ctx->effects[i]) continue;
+        ret = receive_samples(ctx->effects[i], samples, max_nb_samples);
+        while (ret > 0) {
+            ret = send_samples(ctx->effects[i + 1], samples, ret);
+            if (ret < 0) break;
+            ret = receive_samples(ctx->effects[i], samples, max_nb_samples);
+        }
+    }
+    if (ctx->effects[MAX_NB_EFFECTS - 1]) {
+        ret = receive_samples(ctx->effects[MAX_NB_EFFECTS - 1],
+                    samples, max_nb_samples);
+    }
+    return ret;
+}
+
+int xm_effect_send_samples(XmEffectContext *ctx,
+        const void *samples, const size_t nb_samples) {
+    return send_samples(ctx->effects[0], samples, nb_samples);
+}
+
+int set_xm_effect(XmEffectContext *ctx,
+        const char *key, const char *value, int flags) {
     LogInfo("%s key = %s value = %s.\n", __func__, key, value);
     assert(NULL != ctx);
 
@@ -129,40 +166,46 @@ int set_xmly_effect(XmlyEffectContext *ctx, const char *key, const char *value,
     return 0;
 }
 
-int xmly_send_samples(XmlyEffectContext *ctx, const void *samples,
-                      const size_t nb_samples) {
-    return send_samples(ctx->effects[NoiseSuppression], samples, nb_samples);
-}
+int init_xm_effect_context(XmEffectContext *ctx,
+        int sample_rate, int nb_channels) {
+    int error = 0;
 
-int xmly_receive_samples(XmlyEffectContext *ctx, void *samples,
-                         const size_t max_nb_samples) {
-    int ret = 0;
-    for (short i = NoiseSuppression; i < VoiceMorph; ++i) {
-        if (NULL == ctx->effects[i]) continue;
-        ret = receive_samples(ctx->effects[i], samples, max_nb_samples);
-        while (ret > 0) {
-            ret = send_samples(ctx->effects[i + 1], samples, ret);
-            if (ret < 0) break;
-            ret = receive_samples(ctx->effects[i], samples, max_nb_samples);
+    for (short i = 0; i < MAX_NB_EFFECTS; ++i) {
+        if (ctx->effects[i]) {
+            free_effect(ctx->effects[i]);
+            ctx->effects[i] = NULL;
         }
     }
-    if (ctx->effects[VoiceMorph]) {
-        ret =
-            receive_samples(ctx->effects[VoiceMorph], samples, max_nb_samples);
-    }
-    return ret;
-}
 
-void free_xmly_effect(XmlyEffectContext **ctx) {
-    if (NULL == ctx || NULL == *ctx) return;
-    XmlyEffectContext *self = *ctx;
+    ctx->effects[NoiseSuppression] =
+        create_effect(find_effect("noise_suppression"), sample_rate, nb_channels);
+    ctx->effects[Beautify] = create_effect(find_effect("beautify"), sample_rate, nb_channels);
+    ctx->effects[XmlyEcho] = create_effect(find_effect("xmly_echo"), sample_rate, nb_channels);
+    ctx->effects[XmlyReverb] = create_effect(find_effect("xmly_reverb"), sample_rate, nb_channels);
+    ctx->effects[Minions] = create_effect(find_effect("minions"), sample_rate, nb_channels);
+    ctx->effects[VoiceMorph] = create_effect(find_effect("voice_morph"), sample_rate, nb_channels);
 
-    for (short i = NoiseSuppression; i <= VoiceMorph; ++i) {
-        if (self->effects[i]) {
-            free_effect(self->effects[i]);
-            self->effects[i] = NULL;
+    for (short i = 0; i < MAX_NB_EFFECTS; ++i) {
+        if (NULL != ctx->effects[i]) {
+            int ret = init_effect(ctx->effects[i], 0, NULL);
+            if (ret < 0) {
+                LogError("%s i = %d ret = %d.\n", __func__, i, ret);
+                error = ret;
+            }
         }
     }
-    free(*ctx);
-    *ctx = NULL;
+    return error;
+}
+
+XmEffectContext *create_xm_effect_context() {
+    XmEffectContext *self =
+        (XmEffectContext *)calloc(1, sizeof(XmEffectContext));
+    if (NULL == self) return NULL;
+
+    self->nb_effects = MAX_NB_EFFECTS;
+    memset(self->effects, 0, MAX_NB_EFFECTS * sizeof(EffectContext *));
+
+    xmae_inc_ref(self);
+    pthread_mutex_init(&self->mutex, NULL);
+    return self;
 }

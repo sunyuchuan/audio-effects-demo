@@ -1,4 +1,3 @@
-
 EFFECT(noise_suppression)
 EFFECT(beautify)
 EFFECT(xmly_echo)
