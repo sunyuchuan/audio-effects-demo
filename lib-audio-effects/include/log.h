@@ -1,6 +1,10 @@
 #ifndef LOG_H_
 #define LOG_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define ERROR_OPEN_LOG_FILE -1000
 
 // output log mode
@@ -63,5 +67,9 @@ void AePrintLog(const LogLevel level, const char *filename, const int line,
         AePrintLog(LOG_LEVEL_PANIC, __FILE__, __LINE__, format, \
                    ##__VA_ARGS__);                              \
     } while (0)
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif  // LOG_H_

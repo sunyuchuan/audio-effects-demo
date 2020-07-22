@@ -5,6 +5,10 @@
 #ifndef AUDIO_EFFECT_ERROR_DEF_H_
 #define AUDIO_EFFECT_ERROR_DEF_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define AUDIO_EFFECT_SUCCESS 0
 #define AUDIO_EFFECT_EOF -1
 #define AEERROR_NULL_POINT -1008
@@ -37,4 +41,7 @@
 #define kLogErrorInvalidData AVERROR_INVALIDDATA
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #endif  // AUDIO_EFFECT_ERROR_DEF_H_

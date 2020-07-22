@@ -3,9 +3,7 @@
 
 #include <stdio.h>
 
-namespace xmly_audio_recorder_android {
-class PitchTracker {
-   public:
+typedef struct PitchTracker {
     short shift_buf_pos;
     float min_freq;
     float max_freq;
@@ -35,18 +33,20 @@ class PitchTracker {
     float *intensity_cand_seq;
     float *win_pitch_frame;
 
-	float peak_record[10];
-	float peak_sum;
-	short peak_count;
-	float peak_avg;
-    PitchTracker();
-    int PitchTracker_Create();
-    int PitchTracker_Init(float freq_upper_bound, float freq_lower_bound,
-                          float voice_max_power, float intens_min_power,
-                          short candidate_max_num, float frame_peak_thrd);
-    int PitchTracker_Process(short *in, short in_len, float *float_buf,float *seg_pitch_primary, float *seg_pitch_new);
-    int PitchTracker_Release();
-};
-}  // namespace xmly_audio_recorder_android
+    float peak_record[10];
+    float peak_sum;
+    short peak_count;
+    float peak_avg;
+} PitchTracker;
+
+PitchTracker* PitchTracker_Create();
+int PitchTracker_Init(PitchTracker* self,
+    float freq_upper_bound, float freq_lower_bound,
+    float voice_max_power, float intens_min_power,
+    short candidate_max_num, float frame_peak_thrd);
+int PitchTracker_Process(PitchTracker* self,
+    short *in, short in_len, float *float_buf,
+    float *seg_pitch_primary, float *seg_pitch_new);
+void PitchTracker_Release(PitchTracker** pTracker);
 
 #endif

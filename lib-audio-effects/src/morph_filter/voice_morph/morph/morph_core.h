@@ -1,6 +1,6 @@
 #ifndef _MORPH_CORE_H_
 #define _MORPH_CORE_H_
-#include "../../pitch_tracker/src/pitch_macro.h"
+#include "morph_filter/pitch_tracker/src/pitch_macro.h"
 float VoiceMorphGetPitchFactor(float pitch_coeff);
 
 void VoiceMorphPitchTransform(float pitch, float ratio, float range_factor,
@@ -12,8 +12,8 @@ typedef struct refactortype {
 	double endofnoise;
 	double startofvoice;
 	double endofvoice;
-	double ttarget;				//Êµ¼ÊÊ±¼ä´Á
-	long fake_time_num;			//Ïà¶ÔÊ±¼ä´Á
+	double ttarget;				//Êµï¿½ï¿½Ê±ï¿½ï¿½ï¿½
+	long fake_time_num;			//ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½
 	long start_flag;
 	long count_peak;
 	int last_voice_flag;

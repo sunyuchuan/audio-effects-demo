@@ -1,5 +1,5 @@
 #include "pitch_core.h"
-#include "../../utility/math/junior_func.h"
+#include "math/junior_func.h"
 #include <math.h>
 #include "pitch_macro.h"
 

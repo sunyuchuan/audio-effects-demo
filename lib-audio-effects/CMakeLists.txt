@@ -88,15 +88,16 @@ src/tools/util.c
 
 src/morph_filter/pitch_tracker/src/low_pass.c
 src/morph_filter/pitch_tracker/src/pitch_core.c
-src/morph_filter/pitch_tracker/src/pitch_tracker.cc
+src/morph_filter/pitch_tracker/src/pitch_tracker.c
 src/morph_filter/voice_morph/morph/morph_core.c
-src/morph_filter/voice_morph/morph/voice_morph.cc
+src/morph_filter/voice_morph/morph/voice_morph.c
+src/morph_filter/voice_morph/resample/resample.c
 
 src/beautify.c
 src/voice_effect.c
 src/minions.c
 src/noise_suppression.c
-src/voice_morph.c
+src/morph_filter.c
 src/xmly_echo.c
 src/xmly_reverb.c
 

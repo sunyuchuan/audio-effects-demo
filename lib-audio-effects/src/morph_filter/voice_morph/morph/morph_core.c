@@ -1,10 +1,10 @@
 #include <math.h>
 #include <string.h>
 #include "morph_core.h"
-#include "../../pitch_tracker/src/pitch_macro.h"
-#include "../../utility/math/junior_func.h"
+#include "morph_filter/pitch_tracker/src/pitch_macro.h"
+#include "math/junior_func.h"
 #include <stdio.h>
-#include "../../utility/log.h"
+#include "log.h"
 #define SAMPLE_FREQUENCY 44100.0
 #define NUMpi  3.1415926535897932384626433832795028841972
 #define Re re_factor->
