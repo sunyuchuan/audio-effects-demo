@@ -1,6 +1,9 @@
-#include "blackman.h"
+#ifndef _HANNING_TABLE_H_
+#define _HANNING_TABLE_H_
 
-const float blackman_tab[PITCH_BUFFER_SIZE / 2] = {
+#include "pitch_macro.h"
+
+const float blackman_tab[PITCH_BUFFER_LENGTH / 2] = {
     -1.38778e-017f, 2.57354e-006f, 1.02945e-005f, 2.31638e-005f, 4.1183e-005f,
     6.43545e-005f,  9.26809e-005f, 0.000126166f,  0.000164814f,  0.000208629f,
     0.000257617f,   0.000311784f,  0.000371137f,  0.000435682f,  0.000505428f,
@@ -120,7 +123,7 @@ const float blackman_tab[PITCH_BUFFER_SIZE / 2] = {
     0.999341f,      0.999505f,     0.999645f,     0.999763f,     0.999856f,
     0.999927f,      0.999974f,     0.999997f};
 
-const float inv_blackman_corr_tab[PITCH_BUFFER_SIZE] = {
+const float inv_blackman_corr_tab[PITCH_BUFFER_LENGTH] = {
     1.00000f,      1.00001f,      1.00003f,      1.00006f,      1.0001f,
     1.00016f,      1.00023f,      1.00032f,      1.00041f,      1.00052f,
     1.00065f,      1.00078f,      1.00093f,      1.00109f,      1.00127f,
@@ -358,7 +361,7 @@ const float inv_blackman_corr_tab[PITCH_BUFFER_SIZE] = {
     5.19521e+011f, 1.58954e+012f, 6.75085e+012f, 5.3977e+013f,  -4.74077e+016f,
     2.77907e+016f};
 
-const float hamming_tab[PITCH_BUFFER_SIZE / 2] = {
+const float hamming_tab[PITCH_BUFFER_LENGTH / 2] = {
     0.08f,      0.0800066f, 0.0800263f, 0.0800592f, 0.0801052f, 0.0801644f,
     0.0802367f, 0.0803222f, 0.0804208f, 0.0805326f, 0.0806575f, 0.0807956f,
     0.0809467f, 0.081111f,  0.0812884f, 0.081479f,  0.0816826f, 0.0818994f,
@@ -458,7 +461,7 @@ const float hamming_tab[PITCH_BUFFER_SIZE / 2] = {
     0.99913f,   0.999275f,  0.999407f,  0.999525f,  0.99963f,   0.999722f,
     0.999801f,  0.999867f,  0.999919f,  0.999959f,  0.999985f,  0.999998f};
 
-const float inv_hamming_corr_tab[PITCH_BUFFER_SIZE] = {
+const float inv_hamming_corr_tab[PITCH_BUFFER_LENGTH] = {
     1.0f,     1.00002f, 1.00004f, 1.00008f, 1.00012f, 1.00016f, 1.00022f,
     1.00028f, 1.00035f, 1.00043f, 1.00052f, 1.00061f, 1.00071f, 1.00082f,
     1.00094f, 1.00106f, 1.0012f,  1.00134f, 1.00149f, 1.00164f, 1.0018f,
@@ -627,8 +630,7 @@ const float inv_hamming_corr_tab[PITCH_BUFFER_SIZE] = {
     3397.92f, 3575.4f,  3771.18f, 3988.33f, 4230.59f, 4502.67f, 4810.53f,
     5161.84f, 5566.62f, 6038.22f, 6594.87f, 7262.08f, 8076.69f, 9093.98f,
     10400.8f, 12141.9f, 14577.8f, 18229.8f, 24313.7f, 36477.6f, 72961.2f};
-
-const float triangular_tab[PITCH_BUFFER_SIZE / 2] = {
+const float triangular_tab[PITCH_BUFFER_LENGTH / 2] = {
     0.25f,     0.251278f, 0.252555f, 0.253833f, 0.255111f, 0.256388f, 0.257666f,
     0.258944f, 0.260221f, 0.261499f, 0.262777f, 0.264055f, 0.265332f, 0.26661f,
     0.267888f, 0.269165f, 0.270443f, 0.271721f, 0.272998f, 0.274276f, 0.275554f,
@@ -714,7 +716,7 @@ const float triangular_tab[PITCH_BUFFER_SIZE / 2] = {
     0.98339f,  0.984668f, 0.985945f, 0.987223f, 0.988501f, 0.989779f, 0.991056f,
     0.992334f, 0.993612f, 0.994889f, 0.996167f, 0.997445f, 0.998722f, 1.0f};
 
-const float inv_triangular_corr_tab[PITCH_BUFFER_SIZE] = {
+const float inv_triangular_corr_tab[PITCH_BUFFER_LENGTH] = {
     1.0f,     1.00012f, 1.00025f, 1.00038f, 1.00052f, 1.00067f, 1.00081f,
     1.00097f, 1.00113f, 1.00129f, 1.00146f, 1.00163f, 1.00181f, 1.00199f,
     1.00218f, 1.00237f, 1.00257f, 1.00277f, 1.00298f, 1.00319f, 1.00341f,
@@ -883,3 +885,5 @@ const float inv_triangular_corr_tab[PITCH_BUFFER_SIZE] = {
     355.244f, 374.798f, 396.425f, 420.471f, 447.363f, 477.635f, 511.964f,
     551.218f, 596.534f, 649.43f,  711.971f, 787.052f, 878.854f, 993.646f,
     1141.28f, 1338.19f, 1613.92f, 2027.61f, 2717.2f,  4096.57f, 8235.01f};
+
+#endif

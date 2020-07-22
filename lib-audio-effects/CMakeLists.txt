@@ -76,9 +76,6 @@ src/dsp_tools/fft/fft8g.c
 src/dsp_tools/iir_design/iir_design.c
 src/math/junior_func.c
 src/noise_suppression/noise_estimation.c
-src/pitch_tracker/blackman.c
-src/pitch_tracker/low_pass.c
-src/pitch_tracker/pitch_tracker.c
 src/resample/resample.c
 src/tools/avstring.c
 src/tools/conversion.c
@@ -88,7 +85,13 @@ src/tools/log.c
 # src/tools/mem.c
 src/tools/sdl_mutex.c
 src/tools/util.c
-src/voice_morph/morph_core.c
+
+src/morph_filter/pitch_tracker/src/low_pass.c
+src/morph_filter/pitch_tracker/src/pitch_core.c
+src/morph_filter/pitch_tracker/src/pitch_tracker.cc
+src/morph_filter/voice_morph/morph/morph_core.c
+src/morph_filter/voice_morph/morph/voice_morph.cc
+
 src/beautify.c
 src/voice_effect.c
 src/minions.c
