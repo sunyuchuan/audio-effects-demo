@@ -35,11 +35,13 @@ elseif(${CMAKE_C_COMPILER_ID} MATCHES "^(GNU|.*Clang)$")
     message(STATUS "gcc/clang cflags debug ${CMAKE_C_FLAGS_DEBUG}")
     message(STATUS "gcc/clang cflags release ${CMAKE_C_FLAGS_RELEASE}")
 endif()
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ftree-vectorize -ffast-math -O3 -Wno-unused-variable -Wno-unused-parameter")
 
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/src)
+include_directories(${PROJECT_SOURCE_DIR}/src/morph_filter)
 
 # ffmpeg
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Android")

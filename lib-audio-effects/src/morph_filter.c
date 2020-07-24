@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 #include "effect_struct.h"
 #include "error_def.h"
 #include "log.h"
@@ -10,6 +11,7 @@
 #include "morph_filter/voice_morph/morph/voice_morph.h"
 
 #define NB_SAMPLES 1024
+#define OUTPUT_BUF_SIZE (1024 << 3)
 
 typedef struct {
     VoiceMorph *morph;
@@ -19,6 +21,7 @@ typedef struct {
     int16_t *in_buf;
     int16_t *out_buf;
     bool is_morph_on;
+    pthread_mutex_t mutex;
 } priv_t;
 
 enum MorphType { NONE_MORPH = 0, ROBOT, BRIGHT, MAN, WOMEN };
@@ -44,6 +47,7 @@ static int voice_morph_close(EffectContext *ctx) {
     if (priv->fifo_in) fifo_delete(&priv->fifo_in);
     if (priv->fifo_out) fifo_delete(&priv->fifo_out);
     if (priv->morph) morph_core_free(&priv->morph);
+    pthread_mutex_destroy(&priv->mutex);
     return 0;
 }
 
@@ -63,7 +67,7 @@ static int voice_morph_init(EffectContext *ctx, int argc, const char **argv) {
         ret = AEERROR_NOMEM;
         goto end;
     }
-    priv->out_buf = (int16_t *)calloc(NB_SAMPLES << 3, sizeof(int16_t));
+    priv->out_buf = (int16_t *)calloc(OUTPUT_BUF_SIZE, sizeof(int16_t));
     if (NULL == priv->out_buf) {
         ret = AEERROR_NOMEM;
         goto end;
@@ -90,64 +94,69 @@ static int voice_morph_init(EffectContext *ctx, int argc, const char **argv) {
     if (ret < 0) goto end;
 
     priv->is_morph_on = false;
+    pthread_mutex_init(&priv->mutex, NULL);
 
 end:
     if (ret < 0) voice_morph_close(ctx);
     return ret;
 }
 
-static int morph_core_set_type(VoiceMorph *morph,
+static int morph_core_set_type(priv_t *priv,
         enum MorphType type) {
     float pitch_coeff = 1.0f;
+    int ret = -1;
     switch (type) {
         case NONE_MORPH:
             pitch_coeff = 1.0f;
+            priv->robot = false;
             break;
         case ROBOT:
             pitch_coeff = 1.0f;
+            priv->robot = true;
             break;
         case BRIGHT:
             pitch_coeff = 1.0f;
+            priv->robot = false;
             break;
         case MAN:
             pitch_coeff = 0.8f;
+            priv->robot = false;
             break;
         case WOMEN:
             pitch_coeff = 1.5f;
+            priv->robot = false;
             break;
         default:
             break;
     }
 
-    return VoiceMorph_SetConfig(morph, pitch_coeff);
+    pthread_mutex_lock(&priv->mutex);
+    ret = VoiceMorph_SetConfig(priv->morph, pitch_coeff);
+    pthread_mutex_unlock(&priv->mutex);
+    return ret;
 }
 
 static void voice_morph_set_mode(priv_t *priv, const char *mode) {
     if (0 == strcasecmp(mode, "original")) {
         LogInfo("%s set original.\n", __func__);
-        morph_core_set_type(priv->morph, NONE_MORPH);
+        morph_core_set_type(priv, NONE_MORPH);
         priv->is_morph_on = false;
-        priv->robot = false;
     } else if (0 == strcasecmp(mode, "bright")) {
         LogInfo("%s set bright.\n", __func__);
-        morph_core_set_type(priv->morph, BRIGHT);
+        morph_core_set_type(priv, BRIGHT);
         priv->is_morph_on = false;
-        priv->robot = false;
     } else if (0 == strcasecmp(mode, "robot")) {
         LogInfo("%s set robot.\n", __func__);
-        morph_core_set_type(priv->morph, ROBOT);
+        morph_core_set_type(priv, ROBOT);
         priv->is_morph_on = true;
-        priv->robot = true;
     } else if (0 == strcasecmp(mode, "man")) {
         LogInfo("%s set man.\n", __func__);
-        morph_core_set_type(priv->morph, MAN);
+        morph_core_set_type(priv, MAN);
         priv->is_morph_on = true;
-        priv->robot = false;
     } else if (0 == strcasecmp(mode, "women")) {
         LogInfo("%s set women.\n", __func__);
-        morph_core_set_type(priv->morph, WOMEN);
+        morph_core_set_type(priv, WOMEN);
         priv->is_morph_on = true;
-        priv->robot = false;
     }
 }
 
@@ -190,12 +199,14 @@ static int voice_morph_receive(EffectContext *ctx,
 
     int ret = 0;
     if (priv->is_morph_on) {
-        while (fifo_occupancy(priv->fifo_in) >= NB_SAMPLES) {
-            fifo_read(priv->fifo_in, priv->in_buf, NB_SAMPLES);
+        while (fifo_occupancy(priv->fifo_in) > 0) {
+            ret = fifo_read(priv->fifo_in, priv->in_buf, NB_SAMPLES);
             int output_size = 0;
+            pthread_mutex_lock(&priv->mutex);
             ret = VoiceMorph_Process(priv->morph,
-                    (void*)priv->in_buf, NB_SAMPLES << 1,
+                    (void*)priv->in_buf, ret << 1,
                     (char*)priv->out_buf, &output_size, priv->robot);
+            pthread_mutex_unlock(&priv->mutex);
             if (ret < 0) {
                 LogError("%s VoiceMorph_Process error %d.\n", __func__, ret);
                 break;

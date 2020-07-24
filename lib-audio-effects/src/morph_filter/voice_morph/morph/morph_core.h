@@ -1,6 +1,6 @@
 #ifndef _MORPH_CORE_H_
 #define _MORPH_CORE_H_
-#include "morph_filter/pitch_tracker/src/pitch_macro.h"
+#include "pitch_tracker/src/pitch_macro.h"
 float VoiceMorphGetPitchFactor(float pitch_coeff);
 
 void VoiceMorphPitchTransform(float pitch, float ratio, float range_factor,

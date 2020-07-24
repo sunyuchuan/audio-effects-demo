@@ -83,8 +83,6 @@ LABEL_RETURN:
 static int
 XMAudioEffects_receiveSamples(JNIEnv *env, jobject thiz,
         jshortArray samples, jint max_nb_samples) {
-    LOGI("%s\n", __func__);
-
     int ret = -1;
     XmEffectContext *ctx = jni_get_xm_audio_effects(env, thiz);
     JNI_CHECK_GOTO(ctx, env, "java/lang/IllegalStateException", "AEjni: receiveSamples: null ctx", LABEL_RETURN);
@@ -102,8 +100,6 @@ LABEL_RETURN:
 static int
 XMAudioEffects_sendSamples(JNIEnv *env, jobject thiz,
         jshortArray samples, jint nb_samples) {
-    LOGI("%s\n", __func__);
-
     int ret = -1;
     XmEffectContext *ctx = jni_get_xm_audio_effects(env, thiz);
     JNI_CHECK_GOTO(ctx, env, "java/lang/IllegalStateException", "AEjni: sendSamples: null ctx", LABEL_RETURN);

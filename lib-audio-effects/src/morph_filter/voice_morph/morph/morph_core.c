@@ -1,7 +1,7 @@
 #include <math.h>
 #include <string.h>
 #include "morph_core.h"
-#include "morph_filter/pitch_tracker/src/pitch_macro.h"
+#include "pitch_tracker/src/pitch_macro.h"
 #include "math/junior_func.h"
 #include <stdio.h>
 #include "log.h"
@@ -136,13 +136,21 @@ void copyRise(float *in, double tmin, double tmax, float *out, double tmaxTarget
 		for (int i = 0; i < PITCH_FRAME_SHIFT; i++)
 		{
 			int tmp = *out_size + i;
-			if ((tmp < PITCH_FRAME_SHIFT * 3) && (tmp >= 0))
+			if ((tmp < PITCH_FRAME_SHIFT * 9) && (tmp >= 0))
 			{
 				out[*out_size + i] = tmp_res[i];
 			}
 			else
 			{
 				LogInfo("%s outsize out of range %ld.\n", __func__, *out_size);
+				LogInfo("%s tmin %f.\n", __func__, tmin);
+				LogInfo("%s tmax %f.\n", __func__, tmax);
+
+				LogInfo("%s imaxTarget %ld.\n", __func__, imaxTarget);
+				LogInfo("%s imax %ld.\n", __func__, imax);
+				LogInfo("%s imin %ld.\n", __func__, imin);
+				LogInfo("%s fake_time_num %ld.\n", __func__, fake_time_num);
+				LogInfo("%s formant_ratio %ld.\n", __func__, formant_ratio);
 			}
 
 		}
@@ -193,6 +201,11 @@ void copyFall(float *in, double tmin, double tmax, float *out, double tminTarget
 		else if (iTarget >= PITCH_FRAME_SHIFT * 6)
 		{
 			LogInfo("%s iTarget out of range %d.\n", __func__, iTarget);
+			LogInfo("%s iminTarget %ld.\n", __func__, iminTarget);
+			LogInfo("%s imax %ld.\n", __func__, imax);
+			LogInfo("%s imin %ld.\n", __func__, imin);
+			LogInfo("%s fake_time_num %ld.\n", __func__, fake_time_num);
+			LogInfo("%s formant_ratio %ld.\n", __func__, formant_ratio);
 		}
 	}
 
@@ -328,7 +341,7 @@ short NextPitchPeak(float *data, short peak_pos, short period, short low_bound,
 
 short FindLocalPeak(float *buf, short start, short end) {
     float max_val = -1e10f, min_val = 1e10f;
-    short pos_max, pos_min;
+    short pos_max = 0, pos_min = 0;
     for (short i = start; i <= end; i++) {
         if (buf[i] > max_val) {
             max_val = buf[i];
@@ -350,7 +363,7 @@ short FindLocalPeak(float *buf, short start, short end) {
 
 
 //     affiliate               core segment                 affiliate
-// /---------------\/------------------------------\/---------------------\
+// /---------------/------------------------------/---------------------
 // |_______|_______|_______|_______|_______|_______|_______|_______|_______|
 //                     |                                               |
 //                     |                                               |

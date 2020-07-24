@@ -2,7 +2,7 @@
 #define _VOICE_MORPH_H_
 
 #include "libswresample/swresample.h"
-#include "morph_filter/pitch_tracker/src/pitch_tracker.h"
+#include "pitch_tracker/src/pitch_tracker.h"
 #include "morph_core.h"
 #include <stdio.h>
 #include <stdbool.h>
@@ -37,7 +37,7 @@ typedef struct VoiceMorph {
     int rsmp_out_linesize;
     int rate_supervisor;
     int resample_initialized;
-	refactor rebuild_factor;
+    refactor rebuild_factor;
 } VoiceMorph;
 
 /**************************************************************************
