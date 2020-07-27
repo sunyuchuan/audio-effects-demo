@@ -19,7 +19,7 @@ echo -e "\033[1;43;30m\ntest_logger...\033[0m"
 echo -e "\033[1;43;30m\ntest_minions...\033[0m"
 ./tests/test_minions ../data/pcm_mono_44kHz_0035.pcm test_minions.pcm
 echo -e "\033[1;43;30m\ntest_noise_suppression...\033[0m"
-./tests/test_noise_suppression ../data/pcm_mono_44kHz_0035.pcm test_noise_suppression.pcm
+./tests/test_noise_suppression ../data/ns_input.pcm 16000 test_noise_suppression.pcm
 echo -e "\033[1;43;30m\ntest_voice_morph...\033[0m"
 ./tests/test_voice_morph ../data/pcm_mono_44kHz_0035.pcm test_voice_morph.pcm
 echo -e "\033[1;43;30m\ntest_xm_audio_effects...\033[0m"

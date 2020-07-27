@@ -2,6 +2,7 @@
 #include "voice_effect.h"
 #include "file_helper.h"
 #include "log.h"
+#include <stdlib.h>
 
 int main(int argc, char **argv) {
     AeSetLogLevel(LOG_LEVEL_TRACE);
@@ -13,7 +14,7 @@ int main(int argc, char **argv) {
     }
 
     int ret = 0;
-    size_t buffer_size = 1023;
+    size_t buffer_size = 1024;
     short buffer[buffer_size];
     FILE *pcm_reader = NULL;
     FILE *pcm_writer = NULL;
@@ -27,35 +28,22 @@ int main(int argc, char **argv) {
     ret = OpenFile(&pcm_reader, argv[1], 0);
     if (ret < 0) goto end;
     // 打开输出文件
-    ret = OpenFile(&pcm_writer, argv[2], 1);
+    ret = OpenFile(&pcm_writer, argv[3], 1);
     if (ret < 0) goto end;
 
-    ctx = create_effect(find_effect("noise_suppression"), 44100, 1);
+    ctx = create_effect(find_effect("noise_suppression"), atoi(argv[2]), 1);
     ret = init_effect(ctx, 0, NULL);
     if (ret < 0) goto end;
 
-    LogWarning("%s", show_usage(ctx));
+    LogWarning("%s.\n", show_usage(ctx));
 
-    /******** 设置参数(可以不设置，采用默认参数) ********/
-    set_effect(ctx, "low2mid_in_Hz", "4300", 0);
-    set_effect(ctx, "mid2high_in_Hz", "21500", 0);
-    set_effect(ctx, "all_band_gain_threshold", "0.0", 0);
-    set_effect(ctx, "low_gain", "1.0", 0);
-    set_effect(ctx, "mid_gain", "0.75", 0);
-    set_effect(ctx, "high_gain", "0.4", 0);
-    set_effect(ctx, "mid_freq_gain", "0.5", 0);
-    set_effect(ctx, "is_enhance_mid_freq", "0", 0);
-    /****************************************************/
-
-    set_effect(ctx, "return_max_nb_samples", "True", 0);
-
+    set_effect(ctx, "return_max_nb_samples", "false", 0);
     // 设置降噪开关
     set_effect(ctx, "Switch", "On", 0);
 
-    while (buffer_size ==
-           fread(buffer, sizeof(short), buffer_size, pcm_reader)) {
+    while ((ret = fread(buffer, sizeof(short), buffer_size, pcm_reader)) > 0) {
         // 传入数据
-        ret = send_samples(ctx, buffer, buffer_size);
+        ret = send_samples(ctx, buffer, ret);
         if (ret < 0) break;
 
         // 取出数据

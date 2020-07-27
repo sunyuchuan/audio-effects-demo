@@ -77,7 +77,10 @@ src/beautify/multiband_compressor.c
 src/dsp_tools/fft/fft8g.c
 src/dsp_tools/iir_design/iir_design.c
 src/math/junior_func.c
-src/noise_suppression/noise_estimation.c
+src/noise_suppression/ns/fft4g.c
+src/noise_suppression/ns/splitting_filter.c
+src/noise_suppression/ns/ns_core.c
+src/noise_suppression/noise_suppression.c
 src/resample/resample.c
 src/tools/avstring.c
 src/tools/conversion.c
