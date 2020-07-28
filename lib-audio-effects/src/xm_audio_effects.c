@@ -154,7 +154,7 @@ int set_xm_effect(XmEffectContext *ctx,
     assert(NULL != ctx);
 
     if (0 == strcasecmp(key, "NoiseSuppression")) {
-        return set_effect(ctx->effects[NoiseSuppression], key, value, flags);
+        return set_effect(ctx->effects[NoiseSuppression], "Switch", value, flags);
     } else if (0 == strcasecmp(key, "Beautify")) {
         return set_effect(ctx->effects[Beautify], "mode", value, flags);
     } else if (0 == strcasecmp(key, "Special")) {
