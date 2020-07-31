@@ -124,6 +124,12 @@ int VoiceMorph_SetConfig(VoiceMorph *self, float pitch_coeff) {
 
     self->pitch_ratio = pitch_coeff;
     self->formant_ratio = VoiceMorphGetPitchFactor(pitch_coeff);
+
+    int src_rate = (int)roundf(self->formant_ratio * LOCAL_SAMPLE_RATE_FLOAT);
+    VoiceMorph_AudioResample_Init(self->swr_ctx, RESAMPLE_FRAME_INPUT_LEN, src_rate,
+        &self->rsmp_in_buf, &self->rsmp_out_buf, &self->rsmp_out_len,
+        &self->rsmp_out_linesize, &self->resample_initialized);
+
     return 0;
 }
 
@@ -150,11 +156,6 @@ int VoiceMorph_Process(VoiceMorph *self, void *raw, short in_size,
 		self->src_acc_pos = 4 * PITCH_FRAME_SHIFT;
 		self->last_fall_len = PITCH_BUFFER_LENGTH;
 
-		int src_rate = (int)roundf(self->formant_ratio * LOCAL_SAMPLE_RATE_FLOAT);
-		VoiceMorph_AudioResample_Init(self->swr_ctx, RESAMPLE_FRAME_INPUT_LEN, src_rate,
-			&self->rsmp_in_buf, &self->rsmp_out_buf, &self->rsmp_out_len,
-			&self->rsmp_out_linesize, &self->resample_initialized);
-
 		link_calculate(re_factor,&link_out_size, self->formant_ratio, &self->rsmp_in_len_count);
 		*morph_out_size += link_out_size*2;
 		memset(morph_out, 0,*morph_out_size);
@@ -169,11 +170,6 @@ int VoiceMorph_Process(VoiceMorph *self, void *raw, short in_size,
 		self->prev_peak_pos = 4 * PITCH_FRAME_SHIFT;
 		self->src_acc_pos = 4 * PITCH_FRAME_SHIFT;
 		self->last_fall_len = PITCH_BUFFER_LENGTH;
-
-		int src_rate = (int)roundf(self->formant_ratio * LOCAL_SAMPLE_RATE_FLOAT);
-		VoiceMorph_AudioResample_Init(self->swr_ctx, RESAMPLE_FRAME_INPUT_LEN, src_rate,
-			&self->rsmp_in_buf, &self->rsmp_out_buf, &self->rsmp_out_len,
-			&self->rsmp_out_linesize, &self->resample_initialized);
 
 		link_calculate(re_factor, &link_out_size, self->formant_ratio, &self->rsmp_in_len_count);
 		*morph_out_size += link_out_size * 2;
