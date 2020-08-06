@@ -30,6 +30,8 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
     private final static String TAG = MainActivity.class.getName();
     private static final String speech = "/sdcard/audio_effects_test/speech.pcm";
     private static final String effect = "/sdcard/audio_effects_test/effect.pcm";
+    private static final String encodePcm = "/sdcard/search_data_recognized.pcm";
+    private static final String outAAC = "/sdcard/search_data_recognized.aac";
     private static final int maxNbSamples = 1024;
     private OutputStream mOsSpeech;
     private OutputStream mOsEffect;
@@ -37,7 +39,9 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
     private AudioCapturer mCapturer;
     private Button mBtnRecord;
     private Button mBtnPlay;
+    private Button mBtnEncode;
     private Thread mThread;
+    private Thread mEncodeThread;
     private short[] speechSamples = new short[maxNbSamples];
     private XmAudioEffects mAudioEffects = null;
     private Handler mHandler = null;
@@ -119,12 +123,16 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
 
         createOutputFile(speech);
         createOutputFile(effect);
+        createOutputFile(outAAC);
 
         mBtnRecord = findViewById(R.id.btn_record);
         mBtnRecord.setOnClickListener(this);
 
         mBtnPlay = findViewById(R.id.btn_audition);
         mBtnPlay.setOnClickListener(this);
+
+        mBtnEncode = findViewById(R.id.btn_encode);
+        mBtnEncode.setOnClickListener(this);
 
         ((RadioGroup) findViewById(R.id.voice_group)).setOnCheckedChangeListener(this);
         ((RadioGroup) findViewById(R.id.eq_group)).setOnCheckedChangeListener(this);
@@ -153,6 +161,7 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
                             break;
                         case MSG_COMPLETED:
                             stopAudition();
+                            stopEncode();
                             break;
                         default:
                             break;
@@ -170,6 +179,7 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
 
         stopAudition();
         stopRecord();
+        stopEncode();
 
         super.onStop();
     }
@@ -191,6 +201,40 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
             mOsEffect = new FileOutputStream(outEffect);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+        }
+    }
+
+    private class EncodeRunnable implements Runnable {
+        @Override
+        public void run() {
+            try {
+                // 打开pcm文件
+                File inPcm = new File(encodePcm);
+                InputStream isPcm = new FileInputStream(inPcm);
+
+                SearchPCMEncoderAAC searchPCMEncoderAAC =
+                        new SearchPCMEncoderAAC(outAAC, 16000, 1);
+                int bufferSize = searchPCMEncoderAAC.getFrameSizeInByte();
+                byte[] data = new byte[bufferSize];
+                abort = false;
+                while (!abort) {
+                    // 读取内容，放到字节数组里面
+                    int readsize = isPcm.read(data, 0, bufferSize);
+                    if (readsize <= 0) {
+                        Log.w(TAG, "end of pcm file");
+                        if (searchPCMEncoderAAC.encodeData(null, -1) == 1) break;
+                    } else {
+                        searchPCMEncoderAAC.encodeData(data, readsize);
+                    }
+                }
+                searchPCMEncoderAAC.close();
+                isPcm.close();
+                mHandler.sendMessage(mHandler.obtainMessage(MSG_COMPLETED));
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -256,6 +300,21 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
         }
     }
 
+    private void startEncode() {
+        mBtnEncode.setText("停止");
+        mEncodeThread = new Thread(new EncodeRunnable());
+        mEncodeThread.setPriority(Thread.MAX_PRIORITY);
+        mEncodeThread.start();
+    }
+
+    private void stopEncode() {
+        mBtnEncode.setText("编码");
+        abort = true;
+        if (null != mEncodeThread && mEncodeThread.isAlive()) {
+            mEncodeThread.interrupt();
+        }
+    }
+
     private void startAudition() {
         mBtnPlay.setText("停止");
         mThread = new Thread(new AuditionRunnable());
@@ -287,6 +346,12 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
                 startAudition();
             } else if (mBtnPlay.getText().toString().contentEquals("停止")) {
                 stopAudition();
+            }
+        } else if (id == R.id.btn_encode) {
+            if (mBtnEncode.getText().toString().contentEquals("编码")) {
+                startEncode();
+            } else if (mBtnEncode.getText().toString().contentEquals("停止")) {
+                stopEncode();
             }
         }
     }

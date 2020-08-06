@@ -196,4 +196,23 @@
             android:text="试听" />
     </LinearLayout>
 
+    <TextView
+        android:id="@+id/tv_aacEncode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingTop="40dp"
+        android:text="mediacodec"
+        android:textSize="18sp"
+        android:textColor="#000000" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_weight="1">
+        <Button
+            android:id="@+id/btn_encode"
+            android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_weight="1"
+            android:text="编码" />
+    </LinearLayout>
+
 </LinearLayout>
