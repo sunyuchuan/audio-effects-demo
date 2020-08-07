@@ -13,7 +13,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 public class SearchPCMEncoderAAC {
@@ -65,14 +64,14 @@ public class SearchPCMEncoderAAC {
 
             // AAC 硬编码器
             try {
-                mMediaCodec = MediaCodec.createEncoderByType("audio/mp4a-latm");
+                mMediaCodec = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_AUDIO_AAC);
             } catch (Exception e) {
                 e.printStackTrace();
                 return;
             }
 
             MediaFormat format = new MediaFormat();
-            format.setString(MediaFormat.KEY_MIME, "audio/mp4a-latm");
+            format.setString(MediaFormat.KEY_MIME, MediaFormat.MIMETYPE_AUDIO_AAC);
             format.setInteger(MediaFormat.KEY_CHANNEL_COUNT, mNbChannels); //声道数（这里是数字）
             format.setInteger(MediaFormat.KEY_SAMPLE_RATE, mSampleRate); //采样率
             format.setInteger(MediaFormat.KEY_BIT_RATE, KEY_BIT_RATE); //目标码率
