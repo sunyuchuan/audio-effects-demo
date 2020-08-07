@@ -41,13 +41,15 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
     private Button mBtnPlay;
     private Button mBtnEncode;
     private Thread mThread;
-    private Thread mEncodeThread;
     private short[] speechSamples = new short[maxNbSamples];
     private XmAudioEffects mAudioEffects = null;
     private Handler mHandler = null;
     private static final int MSG_PROGRESS = 1;
     private static final int MSG_COMPLETED = 2;
     private volatile boolean abort = false;
+    private SearchPCMEncoderAAC mSearchPCMEncoderAAC = null;
+    private InputStream mIsPcm = null;
+    private boolean encoderAbort = false;
 
     private void getExternalStoragePermission() {
         if (ContextCompat.checkSelfPermission(this,
@@ -161,7 +163,6 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
                             break;
                         case MSG_COMPLETED:
                             stopAudition();
-                            stopEncode();
                             break;
                         default:
                             break;
@@ -201,40 +202,6 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
             mOsEffect = new FileOutputStream(outEffect);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-        }
-    }
-
-    private class EncodeRunnable implements Runnable {
-        @Override
-        public void run() {
-            try {
-                // 打开pcm文件
-                File inPcm = new File(encodePcm);
-                InputStream isPcm = new FileInputStream(inPcm);
-
-                SearchPCMEncoderAAC searchPCMEncoderAAC =
-                        new SearchPCMEncoderAAC(outAAC, 16000, 1);
-                int bufferSize = searchPCMEncoderAAC.getFrameSizeInByte();
-                byte[] data = new byte[bufferSize];
-                abort = false;
-                while (!abort) {
-                    // 读取内容，放到字节数组里面
-                    int readsize = isPcm.read(data, 0, bufferSize);
-                    if (readsize <= 0) {
-                        Log.w(TAG, "end of pcm file");
-                        if (searchPCMEncoderAAC.encodeData(null, -1) == 1) break;
-                    } else {
-                        searchPCMEncoderAAC.encodeData(data, readsize);
-                    }
-                }
-                searchPCMEncoderAAC.close();
-                isPcm.close();
-                mHandler.sendMessage(mHandler.obtainMessage(MSG_COMPLETED));
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 
@@ -302,17 +269,34 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
 
     private void startEncode() {
         mBtnEncode.setText("停止");
-        mEncodeThread = new Thread(new EncodeRunnable());
-        mEncodeThread.setPriority(Thread.MAX_PRIORITY);
-        mEncodeThread.start();
+
+        encoderAbort = false;
+        if (mSearchPCMEncoderAAC != null) mSearchPCMEncoderAAC.close();
+       try {
+           if (mIsPcm != null) {
+               mIsPcm.close();
+           }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        File inPcm = new File(encodePcm);
+        try {
+            mIsPcm = new FileInputStream(inPcm);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        mSearchPCMEncoderAAC = new SearchPCMEncoderAAC(16000, 1);
+        mSearchPCMEncoderAAC.setCallback(mObtainPcmDataCallback);
+        mSearchPCMEncoderAAC.startupEncoder(outAAC);
     }
 
     private void stopEncode() {
         mBtnEncode.setText("编码");
-        abort = true;
-        if (null != mEncodeThread && mEncodeThread.isAlive()) {
-            mEncodeThread.interrupt();
-        }
+
+        encoderAbort = true;
+        if (mSearchPCMEncoderAAC != null) mSearchPCMEncoderAAC.close();
     }
 
     private void startAudition() {
@@ -421,4 +405,21 @@ public class MainActivity extends AppCompatActivity implements AudioCapturer.OnA
             e.printStackTrace();
         }
     }
+
+    private ObtainPcmDataCallback mObtainPcmDataCallback = new ObtainPcmDataCallback() {
+        @Override
+        public int onObtainBuffer(byte[] data, int length) {
+            if (encoderAbort == true) return -1;
+            int ret = 0;
+
+            try {
+                ret = mIsPcm.read(data, 0, length);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            if (ret <= 0) mBtnEncode.setText("编码");
+            return ret;
+        }
+    };
 }
