@@ -236,9 +236,8 @@ void FindPitchCand(float *corr, float *freq_seq, float *intens_seq,
 
 float SelectPitch_Cand1_ConfGtThrd(short pitch_ready, float freq_min,
                                    float freq_max, float *freq_seq,
-                                   float last_pitch) {
+                                   float last_pitch,int *un_confidence) {
     float inv, mul;
-	static int un_confidence = 0;
     if (pitch_ready == 0) {										//�����ʷ�ϵĻ�Ƶ��ֵû�м���ã���ֱ�ӷ���Ψһ�ĺ�ѡ��Ƶ
         return freq_seq[0];
     } else {
@@ -467,8 +466,8 @@ float SelectBestPitchCand(float *intens_seq, float *freq_seq, short cand_num,
                           short *final_pitch_flag, float freq_min,
                           float freq_max, short pitch_ready,	//pitch_ready��ʾ��ʷ�ϵ�ƽ����Ƶ�Ƿ�������
                           float pitch_average,
-						  float *seg_pitch_primary, float *seg_pitch_new,float *pitch_cand_buf) {
-    float upper_freq, lower_freq, best_freq, max_val;
+						  float *seg_pitch_primary, float *seg_pitch_new,float *pitch_cand_buf,int *un_confidence) {
+    float upper_freq, lower_freq, best_freq = 0.0, max_val;
     short i, pos;
     upper_freq = min(*last_pitch * 1.2f, freq_max);		//�����ϴλ�Ƶ����ʷ�ϵĻ�Ƶƽ��ֵ������õ��������ޣ�
     lower_freq = max(*last_pitch * 0.8f, freq_min);		//������λ�Ƶ�����޺�����
@@ -503,7 +502,7 @@ float SelectBestPitchCand(float *intens_seq, float *freq_seq, short cand_num,
     } else if (cand_num == 1) {
         if (*last_pitch != 0.0f && *confidence > PITCH_CONFIDENCE_THRD) {	//�����һ֡�л�Ƶ�����Ŷ�����Ҫ��
             best_freq = SelectPitch_Cand1_ConfGtThrd(
-                pitch_ready, lower_freq, upper_freq, freq_seq, *last_pitch);
+                pitch_ready, lower_freq, upper_freq, freq_seq, *last_pitch, un_confidence);
             *confidence += 1;
         } else if (*last_pitch != 0.0f &&					//�����һ�εĻ�ƵΪ0����һ�εĻ�Ƶ����ֻ��һ�����������ŶȲ�����Ҫ����ֱ�Ӱ���һ�εĻ�Ƶ���
                    *confidence <= PITCH_CONFIDENCE_THRD) {
