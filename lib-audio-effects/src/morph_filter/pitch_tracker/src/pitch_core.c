@@ -242,21 +242,21 @@ float SelectPitch_Cand1_ConfGtThrd(short pitch_ready, float freq_min,
         return freq_seq[0];
     } else {
         if (freq_seq[0] >= freq_min && freq_seq[0] <= freq_max) {	//���Ψһ�ĺ�ѡ��Ƶ�ں��ʷ�Χ�ڣ��ͷ��ظû�Ƶֵ
-			un_confidence = 0;
+			*un_confidence = 0;
 			return freq_seq[0];
         } else if (freq_seq[0] > 1.75f * last_pitch) {
            /* inv = _reciprocal_sqrt(last_pitch * last_pitch);
             mul = inv * freq_seq[0];
             mul = round_float(mul);
             inv = _reciprocal_sqrt(mul * mul);*/
-			if (un_confidence > 0)
+			if (*un_confidence > 0)
 			{
-				un_confidence = 0;
+				*un_confidence = 0;
 				return freq_seq[0];
 			}
 			else
 			{
-				un_confidence++;
+				(*un_confidence)++;
 				return last_pitch;
 			}
             //return freq_seq[0] * inv;
@@ -267,14 +267,14 @@ float SelectPitch_Cand1_ConfGtThrd(short pitch_ready, float freq_min,
            /* inv = _reciprocal_sqrt(freq_seq[0] * freq_seq[0]);		//��С����һ�λ�Ƶ��0.7��������Ϊ��һ�εĻ�Ƶ�а�Ƶ���߸�С��ƫ��
             mul = inv * last_pitch;									//ʵ�ʵĻ�Ƶ�Ǻ�ѡ��Ƶ������������
             mul = round_float(mul);*/
-			if (un_confidence > 0)
+			if (*un_confidence > 0)
 			{
-				un_confidence = 0;
+				*un_confidence = 0;
 				return freq_seq[0];
 			}
 			else
 			{
-				un_confidence++;
+				(*un_confidence)++;
 				return last_pitch;
 			}
             //return freq_seq[0] * mul;
